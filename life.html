@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070b16">
+  <meta name="description" content="ใช้ชีวิตต่อเนื่องในสถานการณ์จำลอง ตั้งแต่เกิดจนถึงช่วงสุดท้าย">
+  <title>ใช้ชีวิตจำลอง — One Life, One World</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { color-scheme: dark; --ink: #edf2ff; --muted: #8d98b5; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; min-height: 100vh; color: var(--ink); background: radial-gradient(ellipse at 50% -18%, rgba(62,79,156,.26), transparent 49%), #070b16; font-family: "DM Sans", "Noto Sans Thai", sans-serif; }
+    .thai { font-family: "Noto Sans Thai", sans-serif; }
+    .stars { position: fixed; inset: 0; pointer-events: none; opacity: .44; z-index: -1; background-image: radial-gradient(1px 1px at 9% 21%, #d7eaff 50%, transparent), radial-gradient(1px 1px at 77% 12%, #d7eaff 50%, transparent), radial-gradient(1px 1px at 88% 63%, #a9bdff 50%, transparent), radial-gradient(1px 1px at 19% 73%, #d7eaff 50%, transparent), radial-gradient(1px 1px at 62% 86%, #a9bdff 50%, transparent); background-size: 290px 260px; }
+    .glass { background: linear-gradient(145deg, rgba(20,28,50,.79), rgba(11,16,31,.76)); border: 1px solid rgba(151,174,255,.14); box-shadow: 0 24px 80px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.035); backdrop-filter: blur(18px); }
+    .eyebrow { color: #a9b5d3; letter-spacing: .19em; }
+    .progress-track { height: 6px; border-radius: 999px; overflow: hidden; background: rgba(148,163,184,.13); }
+    .progress-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #5fd6db, #8b8bff); transition: width .8s ease; }
+    .pixel-header { display: grid; grid-template-columns: minmax(205px,.8fr) minmax(0,1.8fr); gap: 14px; align-items: stretch; }
+    .pixel-card { overflow: hidden; border: 2px solid rgba(151,174,255,.2); background: rgba(9,14,28,.58); box-shadow: 4px 4px 0 rgba(0,0,0,.2); }
+    .pixel-card-title { background: #8c2345; color: #fff; }
+    .pixel-scene { display: block; width: 100%; height: 160px; image-rendering: pixelated; background: #a8d7dc; }
+    .pixel-avatar { width: 70px; height: 70px; image-rendering: pixelated; border: 3px solid rgba(255,255,255,.7); background: #a8d7dc; box-shadow: 3px 3px 0 rgba(0,0,0,.22); }
+    .pixel-button { border-radius: 2px !important; box-shadow: 3px 3px 0 rgba(0,0,0,.22); }
+    .pixel-button:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 rgba(0,0,0,.22); }
+    .life-layout { display: grid; grid-template-columns: minmax(150px,.82fr) minmax(0,1.65fr) minmax(170px,.9fr); gap: 14px; align-items: start; }
+    .life-panel { min-width: 0; border: 2px solid rgba(155,174,225,.14); background: rgba(9,14,28,.56); border-radius: 3px; padding: 15px; box-shadow: 3px 3px 0 rgba(0,0,0,.12); }
+    .game-stat-track { height: 5px; border-radius: 999px; overflow: hidden; background: rgba(148,163,184,.13); }
+    .game-stat-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg,#5fd6db,#8b8bff); transition: width .45s ease; }
+    .life-log { max-height: 390px; overflow-y: auto; }
+    .life-log-entry { border-left: 2px solid rgba(102,228,237,.35); padding: 0 0 15px 12px; }
+    .life-log-entry:last-child { padding-bottom: 0; }
+    .life-grid { display: grid; grid-template-columns: repeat(8,minmax(0,1fr)); gap: 3px; }
+    .life-cell { aspect-ratio: 1; border-radius: 1px; background: rgba(148,163,184,.13); }
+    .life-cell.current { outline: 2px solid #78e5eb; outline-offset: -2px; background: rgba(95,214,219,.28); }
+    .life-cell.past { background: rgba(95,214,219,.48); }
+    button:focus-visible { outline: 2px solid #78e5eb; outline-offset: 4px; }
+    @media (max-width: 720px) { .life-layout { grid-template-columns: 1fr; } .life-log { max-height: 300px; } }
+    @media (max-width: 560px) { .pixel-header { grid-template-columns: 1fr; } .pixel-scene { height: 130px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+  </style>
+  <link rel="stylesheet" href="site-controls.css">
+  <link rel="stylesheet" href="life-theme.css">
+</head>
+<body class="life-app antialiased">
+  <div class="stars" aria-hidden="true"></div>
+  <div class="mx-auto max-w-6xl px-5 pb-12 sm:px-8">
+    <header class="flex items-center justify-between py-6">
+      <a href="index.html" class="flex items-center gap-3 no-underline text-inherit" aria-label="กลับไปหน้าสุ่มเกิด">
+        <span class="grid h-10 w-10 place-items-center rounded-xl border border-cyan-200/20 bg-cyan-300/10 text-xl">✦</span>
+        <span><span class="block text-sm font-semibold tracking-wide">ONE LIFE, ONE WORLD</span><span class="thai block text-[11px] text-slate-400">หน้าจำลองการใช้ชีวิต</span></span>
+      </a>
+      <div class="site-controls" aria-label="การตั้งค่าหน้าจอ">
+        <button id="musicToggle" class="site-control thai" type="button" aria-pressed="false">♫ เพลง: ปิด</button>
+        <button id="themeToggle" class="site-control thai" type="button" aria-pressed="false">☀️ โหมดสว่าง</button>
+        <a href="index.html" class="site-control thai">สุ่มชีวิตใหม่</a>
+      </div>
+    </header>
+    <main>
+      <section id="pixelHeader" class="pixel-header mx-auto mt-3 max-w-6xl" aria-label="ภาพชีวิตจำลอง">
+        <article class="pixel-card rounded-sm">
+          <div class="pixel-card-title thai flex items-center justify-between px-3 py-2 text-[10px] font-semibold">
+            <span>แฟ้มชีวิต · <span id="profileCountryCode">WORLD</span></span>
+            <span id="profileYear">2026</span>
+          </div>
+          <div class="flex gap-3 p-3">
+            <canvas id="avatarCanvas" class="pixel-avatar shrink-0" width="32" height="32" role="img" aria-label="ภาพตัวละครพิกเซล"></canvas>
+            <div class="min-w-0 flex-1">
+              <h1 id="characterName" class="thai truncate text-lg font-bold text-white">ชีวิตใหม่</h1>
+              <dl class="thai mt-2 grid grid-cols-[48px_1fr] gap-x-2 gap-y-1 text-[10px] leading-4 text-slate-400">
+                <dt>เพศ</dt><dd id="profileGender" class="text-slate-200"></dd>
+                <dt>เกิด</dt><dd id="profileBorn" class="text-slate-200"></dd>
+                <dt>ที่อยู่</dt><dd id="profilePlace" class="truncate text-slate-200"></dd>
+                <dt>ครอบครัว</dt><dd id="profileWealth" class="text-slate-200"></dd>
+              </dl>
+            </div>
+          </div>
+          <div id="profileCode" class="thai border-t border-white/10 px-3 py-2 font-mono text-[9px] tracking-wider text-slate-500"></div>
+        </article>
+        <article class="pixel-card rounded-sm">
+          <canvas id="sceneCanvas" class="pixel-scene" width="320" height="120" role="img" aria-label="ภาพพิกเซลชุมชนในประเทศที่สุ่มได้"></canvas>
+          <p id="sceneCaption" class="thai border-t border-white/10 px-3 py-2 text-[11px] leading-5 text-slate-300"></p>
+        </article>
+      </section>
+      <section id="lifeSection" class="mx-auto mt-3 max-w-6xl">
+        <article class="glass overflow-hidden rounded-[26px]">
+          <div class="border-b border-white/[.07] px-5 py-5 sm:px-8">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p class="eyebrow thai text-[10px] font-semibold">บันทึกการเดินทาง · LIFE JOURNAL</p>
+                <h2 class="thai mt-2 text-xl font-semibold sm:text-2xl">หนึ่งชีวิต หลายช่วงเวลา</h2>
+                <p id="gameLocation" class="thai mt-2 text-sm text-slate-400"></p>
+              </div>
+              <div class="rounded-xl border border-cyan-200/15 bg-cyan-200/[.06] px-3 py-2 text-center">
+                <p class="thai text-[10px] text-slate-400">อายุ · ปีจำลอง</p>
+                <p id="gameAge" class="thai text-sm font-semibold text-cyan-100">—</p>
+              </div>
+            </div>
+            <div class="mt-5">
+              <div class="mb-2 flex justify-between text-xs text-slate-400"><span id="roundLabel" class="thai">ชีวิตจำลอง</span><span id="roundPercent">0%</span></div>
+              <div class="progress-track"><div id="roundBar" class="progress-fill" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="px-5 py-5 sm:px-8 sm:py-6">
+            <div class="life-layout">
+              <aside class="life-panel">
+                <h2 class="thai mb-4 text-sm font-semibold">สถานะชีวิต <span class="text-[10px] font-normal text-slate-500">0–100</span></h2>
+                <div class="grid gap-4">
+                  <div class="game-stat"><div class="mb-1 flex justify-between text-xs"><span class="thai text-slate-400">สุขภาพ</span><span id="healthValue"></span></div><div class="game-stat-track"><div id="healthBar" class="game-stat-fill"></div></div></div>
+                  <div class="game-stat"><div class="mb-1 flex justify-between text-xs"><span class="thai text-slate-400">ความสุข</span><span id="happinessValue"></span></div><div class="game-stat-track"><div id="happinessBar" class="game-stat-fill"></div></div></div>
+                  <div class="game-stat"><div class="mb-1 flex justify-between text-xs"><span class="thai text-slate-400">ความรู้</span><span id="skillsValue"></span></div><div class="game-stat-track"><div id="skillsBar" class="game-stat-fill"></div></div></div>
+                  <div class="game-stat"><div class="mb-1 flex justify-between text-xs"><span class="thai text-slate-400">ความมั่นคง</span><span id="moneyValue"></span></div><div class="game-stat-track"><div id="moneyBar" class="game-stat-fill"></div></div></div>
+                </div>
+                <p id="lifespanHint" class="thai mt-4 border-t border-white/[.06] pt-3 text-[11px] leading-5 text-slate-500"></p>
+              </aside>
+              <div class="min-w-0">
+                <div id="scenarioCard" class="life-panel">
+                  <p id="scenarioType" class="thai text-xs font-medium text-cyan-200"></p>
+                  <h2 id="scenarioTitle" class="thai mt-2 text-lg font-semibold"></h2>
+                  <p id="scenarioDescription" class="thai mt-2 text-sm leading-7 text-slate-300"></p>
+                  <div id="scenarioChoices" class="mt-5 grid gap-3"></div>
+                </div>
+                <div id="gameFeedback" class="hidden life-panel mt-3" role="status">
+                  <p class="thai text-xs font-semibold text-cyan-100">ผลจากการตัดสินใจ</p>
+                  <p id="feedbackText" class="thai mt-2 text-sm leading-7 text-slate-300"></p>
+                  <button id="continueGameBtn" type="button" class="pixel-button thai mt-4 inline-flex min-h-11 items-center bg-cyan-200 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:brightness-110">เดินหน้าต่อ →</button>
+                </div>
+                <div class="life-panel mt-3">
+                  <div class="mb-3 flex items-center justify-between"><h2 class="thai text-sm font-semibold">บันทึกชีวิต</h2><span class="thai text-[10px] text-slate-500">เหตุการณ์ที่คุณพบ</span></div>
+                  <div id="lifeLog" class="life-log space-y-3" aria-live="polite"></div>
+                </div>
+                <div id="gameSummary" class="hidden life-panel mt-3">
+                  <p class="eyebrow thai text-[10px] font-semibold">SIMULATION COMPLETE</p>
+                  <h2 id="summaryTitle" class="thai mt-2 text-lg font-semibold">ชีวิตจำลองสิ้นสุดลง</h2>
+                  <p id="summaryText" class="thai mt-2 text-sm leading-7 text-slate-300"></p>
+                  <div class="mt-4 flex flex-wrap gap-2">
+                    <button id="replayGameBtn" type="button" class="pixel-button thai inline-flex min-h-11 items-center bg-cyan-200 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:brightness-110">↻ ใช้ชีวิตนี้อีกครั้ง</button>
+                    <a href="index.html" class="pixel-button thai inline-flex min-h-11 items-center border border-white/10 bg-white/[.045] px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-200/30">สุ่มชีวิตใหม่</a>
+                  </div>
+                </div>
+              </div>
+              <aside class="grid gap-3">
+                <div class="life-panel">
+                  <div class="flex items-start justify-between gap-2">
+                    <div><h2 class="thai text-sm font-semibold">กระเป๋าเงิน</h2><p id="cashBalance" class="thai mt-2 text-xl font-bold text-emerald-200"></p></div>
+                    <span class="thai rounded-sm border border-emerald-200/20 bg-emerald-200/[.06] px-2 py-1 text-[9px] text-emerald-100">เครดิตจำลอง</span>
+                  </div>
+                  <div class="thai mt-3 grid grid-cols-2 gap-2 border-t border-white/[.06] pt-3 text-[10px]">
+                    <div><p class="text-slate-500">รายรับ / เดือน</p><p id="monthlyIncome" class="mt-1 text-slate-200"></p></div>
+                    <div><p class="text-slate-500">รายจ่าย / เดือน</p><p id="monthlyExpenses" class="mt-1 text-slate-200"></p></div>
+                  </div>
+                  <p id="walletNote" class="thai mt-3 text-[10px] leading-5 text-slate-500"></p>
+                </div>
+                <div class="life-panel"><h2 class="thai text-sm font-semibold">ครอบครัวและชีวิต</h2><p id="familySummary" class="thai mt-3 text-xs leading-6 text-slate-400"></p></div>
+                <div class="life-panel">
+                  <div class="mb-3 flex items-center justify-between gap-2"><h2 class="thai text-sm font-semibold">แผนที่ชีวิต</h2><span id="lifeGridCount" class="thai text-[10px] text-slate-500">0 ปี</span></div>
+                  <div id="lifeGrid" class="life-grid" aria-label="แผนภาพอายุจำลอง"></div>
+                  <p class="thai mt-3 text-[10px] leading-5 text-slate-500">หนึ่งช่องแทนอายุประมาณ 1 ปี</p>
+                </div>
+              </aside>
+            </div>
+            <p class="thai mt-5 border-t border-white/[.06] pt-4 text-[11px] leading-6 text-slate-500">เหตุการณ์และผลลัพธ์เป็นเรื่องสมมุติเพื่อความสนุก อายุขัยจำลองเป็นค่าประมาณเชิงเกม ไม่ใช่การทำนายอายุหรือชะตาชีวิตของบุคคลจริง</p>
+          </div>
+        </article>
+      </section>
+      <section id="missingProfile" class="glass mx-auto mt-8 hidden max-w-xl rounded-2xl p-6 text-center">
+        <h1 class="thai text-xl font-semibold">ยังไม่มีชีวิตที่สุ่มไว้</h1>
+        <p class="thai mt-3 text-sm leading-7 text-slate-400">กลับไปหน้าสุ่มเกิดก่อน แล้วระบบจะพาคุณมาที่นี่พร้อมข้อมูลชีวิตจำลอง</p>
+        <a href="index.html" class="thai mt-5 inline-flex min-h-11 items-center rounded-xl bg-cyan-200 px-4 py-2 text-sm font-semibold text-slate-950">ไปหน้าสุ่มเกิด</a>
+      </section>
+    </main>
+  </div>
+  <script>
+    "use strict";
+    const profileText = sessionStorage.getItem("one-life-profile");
+    let profile = null;
+    if (profileText) {
+      try {
+        profile = JSON.parse(profileText);
+      } catch (error) {
+        console.error("อ่านข้อมูลชีวิตจำลองที่บันทึกไว้ไม่สำเร็จ", error);
+      }
+    }
+
+    const validProfile = profile
+      && typeof profile.country?.name === "string"
+      && Number.isFinite(profile.country.life)
+      && Number.isFinite(profile.country.literacy)
+      && Number.isFinite(profile.country.internet)
+      && typeof profile.gender === "string"
+      && typeof profile.wealth === "string";
+
+    if (!validProfile) {
+      document.getElementById("lifeSection").classList.add("hidden");
+      document.getElementById("pixelHeader").classList.add("hidden");
+      document.getElementById("missingProfile").classList.remove("hidden");
+    } else {
+      const country = profile.country;
+      const $ = id => document.getElementById(id);
+      const countryCodes = { "ไทย": "THA", "อินเดีย": "IND", "จีน": "CHN", "ญี่ปุ่น": "JPN", "เม็กซิโก": "MEX", "สหรัฐอเมริกา": "USA", "บราซิล": "BRA", "แคนาดา": "CAN", "ออสเตรเลีย": "AUS", "ฝรั่งเศส": "FRA" };
+      const names = profile.gender === "เด็กผู้หญิง"
+        ? ["Luna Reyes", "Maya Chen", "Sofia Costa", "Nina Patel", "Amara Okafor"]
+        : ["Diego Ruiz", "Arun Das", "Kai Tanaka", "Noah Martin", "Mateo Silva"];
+      let nameSeed = 0;
+      for (const character of country.name) nameSeed = (nameSeed * 31 + character.charCodeAt(0)) >>> 0;
+      const characterName = names[nameSeed % names.length];
+      $("characterName").textContent = characterName;
+      $("profileCountryCode").textContent = countryCodes[country.name] || (country.region || "WORLD").slice(0, 3).toUpperCase();
+      $("profileYear").textContent = "2026";
+      $("profileGender").textContent = profile.gender;
+      $("profileBorn").textContent = `${country.name} · 2026`;
+      $("profilePlace").textContent = `${country.name} · ${country.region || "ชุมชน"}`;
+      $("profileWealth").textContent = profile.wealth;
+      $("profileCode").textContent = `LIFE<${$("profileCountryCode").textContent}<<${characterName.toUpperCase().replaceAll(" ", "<")}<<<<`;
+      $("sceneCaption").textContent = `ชุมชนจำลองใน${country.name} · บ้านและผู้คนในละแวกเดียวกัน · เรื่องราวของคุณเริ่มต้นที่นี่`;
+
+      function drawPixelScene(frame = 0) {
+        const canvas = $("sceneCanvas");
+        const context = canvas.getContext("2d");
+        context.imageSmoothingEnabled = false;
+        const rect = (x, y, width, height, color) => {
+          context.fillStyle = color;
+          context.fillRect(x, y, width, height);
+        };
+        const regionColors = {
+          asia: ["#9ddce4", "#589d80", "#3b745f", "#c77e5f"],
+          africa: ["#f1cb83", "#b8a35e", "#788949", "#bd7951"],
+          europe: ["#acd9e4", "#7eb58a", "#547c63", "#bd7b68"],
+          americas: ["#a6d9df", "#82b875", "#4b8c5a", "#c8795d"],
+          oceania: ["#a9dce6", "#70b78e", "#408a6d", "#d28b68"]
+        };
+        const [sky, farGreen, nearGreen, roof] = regionColors[country.region] || regionColors.asia;
+        rect(0, 0, 320, 120, sky);
+        rect(0, 12, 320, 2, "rgba(255,255,255,.2)");
+        rect(238, 14, 6, 6, "#fff8d5");
+        rect(244, 10, 12, 10, "#fff8d5");
+        rect(256, 14, 10, 6, "#fff8d5");
+        const cloudX = (28 + Math.floor(frame / 2)) % 320;
+        rect(cloudX, 17, 7, 7, "#fff8d5");
+        rect(cloudX + 7, 13, 12, 11, "#fff8d5");
+        rect(cloudX + 19, 17, 8, 7, "#fff8d5");
+        rect(0, 40, 320, 15, farGreen);
+        rect(0, 48, 320, 8, "#adcda3");
+        rect(0, 58, 320, 30, nearGreen);
+        rect(0, 82, 320, 5, "#d5bb78");
+        rect(0, 87, 320, 23, "#79614d");
+        rect(0, 87, 320, 3, "#a68a67");
+        rect(0, 107, 320, 13, "#4a4b43");
+        for (let x = 4; x < 320; x += 19) {
+          rect(x, 100 + (x % 3), 2, 2, "#b49a72");
+          rect(x + 8, 113 - (x % 4), 2, 2, "#69725a");
+        }
+        rect(16, 49, 50, 37, "#e6dec3");
+        rect(12, 46, 58, 7, roof);
+        rect(20, 40, 43, 7, roof);
+        rect(26, 34, 30, 7, roof);
+        rect(34, 31, 14, 4, roof);
+        rect(22, 56, 16, 13, "#83b8bd");
+        rect(25, 59, 10, 7, "#bce4dd");
+        rect(45, 59, 12, 27, "#8f654b");
+        rect(48, 62, 2, 2, "#f5d477");
+        rect(0, 72, 320, 3, "#73533f");
+        rect(0, 79, 320, 3, "#73533f");
+        for (let x = 5; x < 320; x += 23) {
+          rect(x, 68, 3, 18, "#795b42");
+          rect(x + 6, 74, 2, 2, "#e8d1a2");
+        }
+        rect(108, 48, 4, 25, "#75533e");
+        rect(102, 47, 16, 4, "#75533e");
+        rect(109, 39, 3, 10, "#75533e");
+        rect(100, 59, 15, 3, "#4d8960");
+        rect(97, 55, 4, 6, "#4d8960");
+        rect(114, 55, 4, 8, "#4d8960");
+        drawScenePerson(162 + Math.round(Math.sin(frame / 2) * 2), 58 + Math.round(Math.abs(Math.sin(frame)) * 2), "#273443", "#e7ae85", "#5178a0");
+        drawScenePerson(181 + Math.round(Math.sin(frame / 2 + 1) * 2), 56 + Math.round(Math.abs(Math.sin(frame + 1)) * 2), "#312e32", "#d99b74", "#b45756");
+        drawScenePerson(199 + Math.round(Math.sin(frame / 2 + 2) * 2), 68 + Math.round(Math.abs(Math.sin(frame + 2)) * 2), "#362c2c", "#e7ae85", "#e5bd63", true);
+        drawScenePerson(216 + Math.round(Math.sin(frame / 2 + 3) * 2), 61 + Math.round(Math.abs(Math.sin(frame + 3)) * 2), "#252f3c", "#c98566", "#636eaa");
+        rect(238, 72, 7, 7, "#d66350");
+        rect(240, 69, 3, 3, "#568958");
+      }
+
+      drawPixelScene();
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        let sceneFrame = 0;
+        window.setInterval(() => {
+          sceneFrame = (sceneFrame + 1) % 350;
+          drawPixelScene(sceneFrame);
+        }, 220);
+      }
+
+      function drawScenePerson(x, y, hair, skin, shirt, child = false) {
+        const context = $("sceneCanvas").getContext("2d");
+        const block = child ? 3 : 4;
+        const rect = (px, py, width, height, color) => {
+          context.fillStyle = color;
+          context.fillRect(px, py, width, height);
+        };
+        rect(x + block, y, block * 3, block, hair);
+        rect(x, y + block, block * 5, block * 3, hair);
+        rect(x + block, y + block, block * 3, block * 3, skin);
+        rect(x + block, y + block * 2, block, block, "#27313d");
+        rect(x + block * 3, y + block * 2, block, block, "#27313d");
+        rect(x + block, y + block * 4, block * 3, block, skin);
+        rect(x, y + block * 4, block * 5, block * 3, shirt);
+        rect(x + block, y + block * 7, block, block * 2, "#384250");
+        rect(x + block * 3, y + block * 7, block, block * 2, "#384250");
+      }
+
+      function drawAvatar(age) {
+        const canvas = $("avatarCanvas");
+        const context = canvas.getContext("2d");
+        context.imageSmoothingEnabled = false;
+        const rect = (x, y, width, height, color) => {
+          context.fillStyle = color;
+          context.fillRect(x, y, width, height);
+        };
+        const skinTones = ["#f0c7a2", "#d99c75", "#ba7958", "#8c5946"];
+        const skin = skinTones[nameSeed % skinTones.length];
+        const hair = age >= 65 ? "#b9bdbe" : ["#302d32", "#49332c", "#252c38"][nameSeed % 3];
+        const shirt = ["#368e86", "#bb6659", "#536aa0", "#be8b44"][nameSeed % 4];
+        rect(0, 0, 32, 32, "#9bd0d5");
+        rect(2, 3, 5, 4, "rgba(255,255,255,.22)");
+        rect(5, 5, 22, 16, hair);
+        rect(7, 6, 18, 14, skin);
+        rect(5, 9, 3, 7, hair);
+        rect(24, 9, 3, 7, hair);
+        rect(10, 11, 3, 3, "#29313a");
+        rect(20, 11, 3, 3, "#29313a");
+        rect(14, 16, 5, 2, "#9b5b4f");
+        rect(6, 21, 20, 9, shirt);
+        rect(10, 22, 12, 3, age < 18 ? "#6fc2a1" : "#6e91b4");
+        rect(8, 28, 7, 4, "#303a48");
+        rect(18, 28, 7, 4, "#303a48");
+      }
+
+      const scenarios = [
+        { minAge: 5, maxAge: 17, school: true, type: "ชีวิตในโรงเรียน · เพื่อนและการเรียน", title: "เพื่อนชวนคุณเข้าร่วมกิจกรรมหลังเลิกเรียน", description: c => `คุณอยู่ชั้นเรียนในชุมชนของ${c.name} มีทั้งการบ้าน กิจกรรม และเวลาที่อยากใช้กับเพื่อน`, choices: [
+          { label: "เข้าชมรมที่สนใจและแบ่งเวลาทำการบ้าน", outcome: "ได้ลองสิ่งใหม่และฝึกแบ่งเวลา แม้บางวันอาจเหนื่อยขึ้น", effects: { skills: 4, happiness: 4, health: -1 } },
+          { label: "ช่วยเพื่อนอ่านหนังสือเตรียมสอบ", outcome: "การทบทวนกับเพื่อนช่วยให้เข้าใจบทเรียนและสร้างความสัมพันธ์ที่ดี", effects: { skills: 5, happiness: 2 } },
+          { label: "กลับบ้านพักและทำการบ้านให้เสร็จก่อน", outcome: "คุณได้พักและจัดการสิ่งจำเป็นก่อน โดยยังมีโอกาสร่วมกิจกรรมครั้งหน้า", effects: { health: 3, skills: 2 } }
+        ] },
+        { minAge: 8, maxAge: 99, family: true, type: "ครอบครัว · การวางแผน", title: "มีค่าใช้จ่ายจำเป็นที่ไม่ได้วางแผนไว้", description: c => `ครอบครัวของคุณใน${c.name}มีค่าใช้จ่ายก้อนหนึ่งเข้ามากะทันหัน ทุกคนกำลังช่วยกันหาทางจัดการ`, choices: [
+          { label: "ช่วยกันจัดงบใหม่และใช้เงินสำรอง", outcome: "การจัดลำดับค่าใช้จ่ายช่วยให้รับมือเหตุการณ์ได้ แต่เงินสำรองลดลงเล็กน้อย", effects: { money: -3, skills: 2, happiness: 1 }, cashChange: -90 },
+          { label: "คุยกับคนในครอบครัวเพื่อหาความช่วยเหลือ", outcome: "การขอแรงสนับสนุนช่วยแบ่งเบาภาระ และทำให้ได้พูดคุยกันมากขึ้น", effects: { money: 2, happiness: 3 }, cashChange: 40 },
+          { label: "รับงานเล็ก ๆ เพิ่มเพื่อหารายได้", outcome: "มีรายได้เพิ่ม แต่ต้องแบ่งเวลาให้ดีเพื่อไม่ให้กระทบการพักผ่อน", effects: { money: 5, health: -2, skills: 1 }, cashChange: 160 }
+        ] },
+        { minAge: 7, maxAge: 17, school: true, type: "ชีวิตในโรงเรียน · การเรียน", title: "ใกล้ถึงวันสอบ แต่เพื่อนชวนไปทำกิจกรรม", description: c => `ที่โรงเรียนใน${c.name} คุณมีสอบในอีกไม่กี่วัน ขณะเดียวกันก็อยากใช้เวลากับเพื่อน`, choices: [
+          { label: "แบ่งเวลาอ่านหนังสือและพักเป็นช่วง ๆ", outcome: "คุณเตรียมตัวได้ต่อเนื่องโดยยังมีเวลาพัก ทำให้จัดการความกังวลได้ดีขึ้น", effects: { skills: 5, health: 1, happiness: 1 } },
+          { label: "ติวกับเพื่อนแล้วช่วยกันทบทวน", outcome: "การเรียนร่วมกันช่วยให้เข้าใจบทเรียนและได้ใช้เวลากับเพื่อน", effects: { skills: 4, happiness: 3 } },
+          { label: "ไปทำกิจกรรมก่อนแล้วค่อยอ่านทีหลัง", outcome: "คุณได้ผ่อนคลายกับเพื่อน แต่ต้องตั้งใจจัดเวลาอ่านที่เหลือให้ดี", effects: { happiness: 4, skills: -1, health: -1 } }
+        ] },
+        { minAge: 7, maxAge: 17, school: true, type: "การเรียนรู้ · โอกาส", title: "มีโอกาสเรียนทักษะใหม่หลังเลิกเรียน", description: c => `ศูนย์การเรียนรู้ในชุมชนของคุณที่${c.name}เปิดกิจกรรมสอนทักษะที่สนใจ แต่เวลาว่างมีจำกัด`, choices: [
+          { label: "สมัครเรียนและจัดตารางเวลาให้ชัดเจน", outcome: "คุณได้ฝึกทักษะอย่างต่อเนื่อง การจัดเวลาช่วยให้ยังเหลือเวลาพัก", effects: { skills: 7, happiness: 2, health: -1 } },
+          { label: "ลองเรียนด้วยตัวเองจากแหล่งที่เข้าถึงได้", outcome: "การเรียนด้วยตัวเองยืดหยุ่นและช่วยฝึกความรับผิดชอบ", effects: { skills: 5, happiness: 1 } },
+          { label: "ขอคำแนะนำจากครูหรือคนที่ไว้ใจก่อน", outcome: "คำแนะนำช่วยให้เห็นทางเลือกชัดขึ้นและตัดสินใจได้โดยไม่ต้องรีบร้อน", effects: { skills: 3, happiness: 3 } }
+        ] },
+        { minAge: 0, maxAge: 99, type: "ชุมชน · เหตุการณ์ไม่คาดคิด", title: "การเดินทางประจำวันติดขัดจากสภาพอากาศ", description: c => `ฝนตกหนักและการเดินทางในพื้นที่ที่คุณอยู่ใน${c.name}ล่าช้า คุณมีนัดสำคัญในวันนี้`, choices: [
+          { label: "แจ้งผู้เกี่ยวข้องและหาทางเดินทางที่ปลอดภัย", outcome: "คุณอาจไปถึงช้ากว่าเดิม แต่ลดความเสี่ยงและสื่อสารกับคนที่รอได้", effects: { health: 2, skills: 2, happiness: 1 } },
+          { label: "เปลี่ยนไปทำกิจกรรมทางไกลถ้าทำได้", outcome: "การปรับแผนช่วยประหยัดเวลาและทำให้ยังทำภารกิจต่อได้", effects: { skills: 3, money: 1, happiness: 2 } },
+          { label: "รีบออกเดินทางตามแผนเดิม", outcome: "คุณอาจไปได้ทัน แต่ความเร่งรีบทำให้เหนื่อยและต้องระวังเป็นพิเศษ", effects: { health: -4, happiness: -2, skills: 1 } }
+        ] },
+        { minAge: 18, maxAge: 65, career: true, type: "วัยทำงาน · เลือกเส้นทางอาชีพ", title: "ถึงเวลาตัดสินใจว่าจะเริ่มทำงานสายไหน", description: c => `คุณกำลังมองหาอาชีพใน${c.name} เลือกเส้นทางที่สนใจได้ แล้วเลือกรูปแบบการทำงานที่เหมาะกับชีวิตของคุณ` },
+        { minAge: 18, maxAge: 99, type: "สุขภาพ · การดูแลตัวเอง", title: "ช่วงนี้พักผ่อนไม่พอและรู้สึกเหนื่อยต่อเนื่อง", description: c => `งานและภาระส่วนตัวใน${c.name}ทำให้คุณเริ่มรู้สึกว่าร่างกายต้องการการดูแล`, choices: [
+          { label: "หาเวลาพักและปรับกิจวัตรประจำวัน", outcome: "การพักและปรับกิจวัตรอาจช่วยให้มีแรงกลับมา โดยอาการที่ต่อเนื่องควรปรึกษาผู้เชี่ยวชาญ", effects: { health: 6, happiness: 3, money: -1 } },
+          { label: "ปรึกษาบุคลากรทางการแพทย์", outcome: "การขอคำแนะนำช่วยให้เข้าใจทางเลือกดูแลสุขภาพมากขึ้น", effects: { health: 7, skills: 1, money: -3 } },
+          { label: "ฝืนทำทุกอย่างต่อไปก่อน", outcome: "งานบางอย่างอาจเสร็จเร็วขึ้น แต่การละเลยความเหนื่อยอาจทำให้ฟื้นตัวได้ยากกว่าเดิม", effects: { money: 2, health: -6, happiness: -4 } }
+        ] },
+        { minAge: 10, maxAge: 99, type: "ความสัมพันธ์ · การสื่อสาร", title: "เพื่อนสนิทเข้าใจสิ่งที่คุณพูดผิด", description: c => `หลังเกิดความเข้าใจผิดกับเพื่อนในชุมชนของคุณที่${c.name} คุณต้องตัดสินใจว่าจะเริ่มคุยกันอย่างไร`, choices: [
+          { label: "ชวนคุยอย่างใจเย็นและฟังอีกฝ่าย", outcome: "การรับฟังช่วยเปิดโอกาสให้เข้าใจกัน แม้อาจต้องใช้เวลา", effects: { happiness: 6, skills: 3 } },
+          { label: "เขียนข้อความอธิบายความรู้สึกให้ชัดเจน", outcome: "การเรียบเรียงความคิดช่วยลดการสื่อสารคลาดเคลื่อน", effects: { happiness: 4, skills: 2 } },
+          { label: "เว้นระยะสักพักก่อนกลับไปคุย", outcome: "การให้เวลาตัวเองสงบลงอาจช่วยได้ แต่ควรกลับมาสื่อสารเมื่อพร้อม", effects: { health: 1, happiness: 1 } }
+        ] },
+        { minAge: 16, maxAge: 99, type: "การเงิน · เป้าหมายระยะยาว", title: "อยากเก็บเงินเพื่อเป้าหมายสำคัญ", description: c => `คุณอยากเก็บเงินเพื่อเรียนต่อหรือซื้ออุปกรณ์ทำงานใน${c.name} แต่มีค่าใช้จ่ายประจำที่ต้องดูแล`, choices: [
+          { label: "ตั้งเป้าหมายรายเดือนและติดตามรายจ่าย", outcome: "แผนที่ทำได้จริงช่วยให้เห็นความคืบหน้า แม้ต้องใช้วินัยและเวลา", effects: { money: 6, skills: 2, happiness: 1 } },
+          { label: "หาความรู้หรือคำปรึกษาเรื่องการเงินก่อน", outcome: "คุณได้ข้อมูลเพื่อวางแผนอย่างรอบคอบขึ้น", effects: { skills: 4, money: 2 } },
+          { label: "ลดรายจ่ายที่ไม่จำเป็นบางส่วน", outcome: "เงินเหลือเก็บเพิ่มขึ้น แต่ควรเลือกตัดเฉพาะสิ่งที่ไม่กระทบสุขภาพและความเป็นอยู่", effects: { money: 4, health: -1, happiness: -1 } }
+        ] },
+        { minAge: 18, maxAge: 70, type: "โอกาส · การเปลี่ยนแปลง", title: "มีโอกาสย้ายไปเริ่มต้นในเมืองใหม่", description: c => `มีงานหรือการเรียนที่น่าสนใจในอีกเมืองหนึ่งของ${c.name} แต่การย้ายอาจเปลี่ยนกิจวัตรและระยะห่างจากคนใกล้ชิด`, choices: [
+          { label: "เปรียบเทียบรายได้ ค่าใช้จ่าย และชีวิตประจำวัน", outcome: "ข้อมูลช่วยให้เห็นต้นทุนและโอกาสรอบด้าน ก่อนตัดสินใจตามเป้าหมายของตัวเอง", effects: { skills: 4, money: 2, happiness: 1 } },
+          { label: "ทดลองไปอยู่ชั่วคราวถ้าจัดการได้", outcome: "การทดลองช่วยให้รู้จักสภาพแวดล้อมจริง แต่ต้องเตรียมเงินและแผนสำรอง", effects: { skills: 4, money: -3, happiness: 2 } },
+          { label: "อยู่ใกล้เครือข่ายสนับสนุนและหาโอกาสในพื้นที่", outcome: "การมีคนคุ้นเคยช่วยให้รู้สึกมั่นคง", effects: { happiness: 4, health: 1, skills: 2 } }
+        ] },
+        { minAge: 20, maxAge: 64, work: true, type: "ชีวิตการทำงาน · เวลาและสุขภาพ", title: "งานเร่งด่วนทำให้ต้องตัดสินใจเรื่องเวลาพัก", description: () => `งานในฐานะ${state?.occupation?.role || "พนักงาน"}มีงานด่วนเข้ามาใกล้กำหนดส่ง คุณจะจัดการอย่างไร`, choices: [
+          { label: "คุยกับทีมเพื่อแบ่งงานและกำหนดเวลาที่ทำได้จริง", outcome: "การสื่อสารช่วยกระจายภาระและรักษาคุณภาพงาน โดยไม่ต้องรับทุกอย่างไว้คนเดียว", effects: { skills: 3, health: 1, happiness: 2 } },
+          { label: "ทำงานเพิ่มในช่วงสั้น ๆ แล้วพักชดเชย", outcome: "งานเสร็จตามกำหนดและอาจมีรายรับเพิ่ม แต่ต้องรักษาเวลาพักหลังจากนั้น", effects: { skills: 2, health: -3, money: 1 }, cashChange: 180 },
+          { label: "ขอปรับกำหนดส่งเพื่อรักษาคุณภาพและสุขภาพ", outcome: "การแจ้งเหตุผลล่วงหน้าช่วยตั้งความคาดหวังให้ชัด และลดการทำงานเร่งจนเกินไป", effects: { health: 3, happiness: 1 } }
+        ] },
+        { minAge: 22, maxAge: 64, work: true, type: "ชีวิตการทำงาน · โอกาสเติบโต", title: "ได้รับโอกาสอบรมหรือเลื่อนบทบาท", description: () => `มีโอกาสพัฒนาทักษะในสาย${state?.occupation?.role || "งาน"} แต่ต้องใช้เวลาและอาจมีค่าใช้จ่าย`, choices: [
+          { label: "เข้าร่วมอบรมและทดลองรับบทบาทใหม่", outcome: "คุณได้พัฒนาทักษะและมีโอกาสเติบโตในงาน รายรับจำลองเพิ่มขึ้นเล็กน้อย", effects: { skills: 5, happiness: 2 }, incomeChange: 180 },
+          { label: "ขอให้ที่ทำงานช่วยสนับสนุนค่าอบรม", outcome: "คุณได้หารือเรื่องการสนับสนุนก่อนลงทุน ทำให้แบ่งภาระค่าใช้จ่ายได้", effects: { skills: 3, happiness: 1 }, cashChange: -120 },
+          { label: "ยังไม่รับโอกาสนี้และโฟกัสงานปัจจุบัน", outcome: "คุณรักษาสมดุลและทำหน้าที่เดิมให้มั่นคง ก่อนพิจารณาโอกาสครั้งหน้า", effects: { health: 2, happiness: 1 } }
+        ] },
+        { minAge: 25, maxAge: 64, work: true, type: "ชีวิตการทำงาน · รายได้ไม่แน่นอน", title: "มีเดือนที่รายรับไม่เป็นไปตามแผน", description: () => `ค่าใช้จ่ายประจำยังมาเหมือนเดิม ขณะที่รายรับจากงาน${state?.workStyle?.name || "ของคุณ"}ลดลงชั่วคราว`, choices: [
+          { label: "ใช้เงินสำรองและทบทวนรายจ่ายที่เลื่อนได้", outcome: "เงินสำรองช่วยรับมือช่วงรายรับลด โดยยังควรกลับมาวางแผนเมื่อสถานการณ์ดีขึ้น", effects: { money: 1, happiness: 1 }, cashChange: -260 },
+          { label: "รับงานเสริมหรือเพิ่มทักษะหารายได้", outcome: "การเพิ่มช่องทางรายได้ช่วยชดเชยบางส่วน แต่ต้องไม่หักโหมเกินกำลัง", effects: { skills: 2, health: -2 }, cashChange: 220 },
+          { label: "ปรึกษาครอบครัวหรือคนที่ไว้ใจเพื่อวางแผน", outcome: "การขอคำปรึกษาช่วยให้เห็นทางเลือกและลดความกังวลในช่วงที่ไม่แน่นอน", effects: { happiness: 3, skills: 1 } }
+        ] },
+        { minAge: 40, maxAge: 99, type: "ครอบครัว · การดูแลกัน", title: "คนในครอบครัวต้องการความช่วยเหลือมากขึ้น", description: c => `คนใกล้ชิดใน${c.name}ต้องการความช่วยเหลือเรื่องการใช้ชีวิตประจำวัน คุณอยากดูแลแต่ก็มีภาระของตัวเอง`, choices: [
+          { label: "แบ่งหน้าที่กับญาติหรือเครือข่ายที่ไว้ใจ", outcome: "การช่วยกันดูแลทำให้ภาระไม่ตกอยู่กับคนเดียว", effects: { happiness: 4, health: 2, skills: 2 } },
+          { label: "คุยกันเพื่อวางแผนความช่วยเหลือที่ทำได้จริง", outcome: "แผนที่ทุกคนมีส่วนร่วมช่วยให้รู้ขอบเขตและจัดการเวลาได้ดีขึ้น", effects: { skills: 4, happiness: 2 } },
+          { label: "รับภาระไว้คนเดียวในช่วงแรก", outcome: "คนในครอบครัวได้รับความช่วยเหลือ แต่คุณอาจเหนื่อยและควรขอแรงสนับสนุน", effects: { happiness: 3, health: -5 } }
+        ] },
+        { minAge: 55, maxAge: 99, type: "วัยหลังทำงาน · การเปลี่ยนแปลง", title: "ถึงเวลาคิดถึงชีวิตหลังเกษียณ", description: c => `ใน${c.name}คุณเริ่มทบทวนว่าจะจัดสมดุลระหว่างรายได้ สุขภาพ เวลาว่าง และคนสำคัญอย่างไร`, choices: [
+          { label: "ค่อย ๆ วางแผนรายจ่ายและกิจวัตรล่วงหน้า", outcome: "การเตรียมตัวช่วยให้เห็นทางเลือกมากขึ้น และปรับแผนตามสถานการณ์ได้", effects: { money: 4, skills: 2, happiness: 1 } },
+          { label: "ใช้เวลากับกิจกรรมและคนที่มีความหมาย", outcome: "ความสัมพันธ์และกิจกรรมที่ชอบช่วยเติมความสุข", effects: { happiness: 6, health: 2, money: -2 } },
+          { label: "หางานหรือบทบาทใหม่ที่เหมาะกับกำลัง", outcome: "บทบาทใหม่ช่วยให้รู้สึกมีเป้าหมาย แต่ควรเลือกจังหวะที่เหมาะกับสุขภาพ", effects: { money: 3, skills: 2, health: -1 } }
+        ] }
+      ];
+      const occupations = [
+        { name: "ธุรกิจและการบริหาร", role: "นักธุรกิจ / ผู้จัดการ", salary: 1850, effects: { skills: 3, money: 2 } },
+        { name: "งานภาครัฐ", role: "ข้าราชการ / เจ้าหน้าที่รัฐ", salary: 1550, effects: { happiness: 2, money: 3 } },
+        { name: "เทคโนโลยีและวิศวกรรม", role: "นักพัฒนาซอฟต์แวร์ / วิศวกร", salary: 2050, effects: { skills: 5, money: 2 } },
+        { name: "การแพทย์และการดูแล", role: "บุคลากรทางการแพทย์", salary: 1750, effects: { skills: 3, happiness: 2 } },
+        { name: "การศึกษา", role: "ครู / อาจารย์", salary: 1450, effects: { skills: 3, happiness: 3 } },
+        { name: "งานช่างและภาคสนาม", role: "ช่างฝีมือ / ช่างเทคนิค", salary: 1600, effects: { skills: 4, money: 2 } },
+        { name: "ค้าขายและบริการ", role: "พนักงานขาย / งานบริการ", salary: 1300, effects: { happiness: 2, skills: 2 } },
+        { name: "เกษตรและอาหาร", role: "เกษตรกร / ผู้ผลิตอาหาร", salary: 1200, effects: { health: -1, skills: 2, happiness: 2 } }
+      ];
+      const workStyles = [
+        { name: "งานประจำ", description: "รายรับสม่ำเสมอ มีตารางงานค่อนข้างชัดเจน", incomeRate: 1, expenseRate: .66, stability: 5 },
+        { name: "งานเป็นกะหรือหน้างาน", description: "มีค่าตอบแทนเพิ่มตามชั่วโมงและลักษณะงาน แต่ตารางเวลาอาจเปลี่ยน", incomeRate: 1.12, expenseRate: .72, stability: 1 },
+        { name: "ฟรีแลนซ์หรือรับงานอิสระ", description: "เลือกงานได้ยืดหยุ่น รายรับอาจขึ้นลงและต้องวางแผนเงินสำรอง", incomeRate: 1.2, expenseRate: .78, stability: -2 },
+        { name: "ทำกิจการหรือค้าขายของตัวเอง", description: "มีโอกาสเติบโต แต่ต้องลงทุนและรับความไม่แน่นอนของรายได้", incomeRate: 1.35, expenseRate: .88, stability: -3, startupCost: 600 }
+      ];
+      const schoolLifeScenario = {
+        type: "ชีวิตในโรงเรียน · เพื่อนและการเรียน",
+        title: "มีงานกลุ่มและกิจกรรมโรงเรียนชนกันในสัปดาห์เดียว",
+        description: () => "เพื่อนในกลุ่มรอให้คุณช่วยทำรายงาน ขณะที่โรงเรียนก็มีกิจกรรมที่คุณตั้งใจเข้าร่วม",
+        school: true,
+        minAge: 5,
+        maxAge: 17,
+        choices: [
+          { label: "คุยแบ่งหน้าที่กับเพื่อนและวางแผนเวลา", outcome: "คุณได้ช่วยงานกลุ่มและยังเข้าร่วมกิจกรรมได้บางส่วน", effects: { skills: 4, happiness: 2 } },
+          { label: "โฟกัสงานกลุ่มให้เสร็จก่อน", outcome: "เพื่อนได้งานที่ครบถ้วน แต่คุณอาจพลาดกิจกรรมที่รอคอย", effects: { skills: 3, happiness: -1 } },
+          { label: "ขอคำแนะนำจากครูเพื่อปรับกำหนดส่ง", outcome: "การสื่อสารตรงไปตรงมาช่วยให้หาทางออกที่ยุติธรรมกับทุกคน", effects: { skills: 3, happiness: 2 } }
+        ]
+      };
+      const educationChoiceScenario = {
+        type: "เรียนต่อหรือทำงาน · ทางเลือกสำคัญ",
+        title: "รายได้ครอบครัวตึงตัวในช่วงที่คุณกำลังจะเรียนต่อ",
+        description: () => "คุณอยากเรียนต่อ แต่ครอบครัวมีค่าใช้จ่ายจำเป็นเพิ่มขึ้น และอยากรู้ว่าคุณจะเลือกทางไหน",
+        minAge: 15,
+        maxAge: 20,
+        lowIncomeEducation: true,
+        choices: [
+          { label: "เรียนต่อและสมัครทุนหรือขอความช่วยเหลือ", outcome: "คุณเลือกลงทุนกับการศึกษาและลองหาทุนช่วยค่าใช้จ่าย ครอบครัวยังต้องวางแผนรายรับอย่างรอบคอบ", effects: { skills: 7, happiness: 2, money: -1 }, cashChange: -180, educationChoice: "เรียนต่อ" },
+          { label: "เรียนต่อควบคู่กับงานพาร์ตไทม์", outcome: "คุณยังได้เรียนพร้อมช่วยหารายได้ แต่ต้องแบ่งเวลาและดูแลการพักผ่อน", effects: { skills: 4, money: 2, health: -2 }, cashChange: 120, partTime: true, educationChoice: "เรียนไปทำงานไป" },
+          { label: "เริ่มทำงานก่อนและค่อยกลับมาเรียนภายหลัง", outcome: "คุณเริ่มช่วยครอบครัวและสะสมประสบการณ์ การกลับไปเรียนยังเป็นทางเลือกในอนาคต", effects: { money: 3, happiness: 1, skills: -1 }, cashChange: 250, earlyWork: true, educationChoice: "เริ่มทำงาน" }
+        ]
+      };
+      const careerScenario = {
+        type: "วัยทำงาน · เลือกเส้นทางอาชีพ",
+        title: "ถึงเวลาตัดสินใจว่าจะเริ่มทำงานสายไหน",
+        description: () => "เลือกอาชีพที่สนใจ แล้วเลือกรูปแบบการทำงาน รายรับและความมั่นคงในเกมจะเปลี่ยนตามทางเลือก",
+        career: true,
+        choices: []
+      };
+      const emergencyScenario = { type: "เหตุฉุกเฉิน · ความปลอดภัย", title: "เกิดเหตุฉุกเฉินในพื้นที่ใกล้ตัว", description: c => `มีประกาศเตือนเหตุฉุกเฉินในพื้นที่ของคุณที่${c.name} สถานการณ์ยังไม่ชัดเจนและความปลอดภัยต้องมาก่อน`, choices: [
+        { label: "ไปยังจุดปลอดภัยและติดตามคำแนะนำจากหน่วยงาน", outcome: "คุณให้ความสำคัญกับความปลอดภัยและขอความช่วยเหลือจากแหล่งที่เหมาะสม", effects: { health: 2, skills: 2, happiness: -1 }, deathChance: .01 },
+        { label: "ติดต่อคนใกล้ชิดและขอความช่วยเหลือ", outcome: "การติดต่อเครือข่ายช่วยให้ประสานความช่วยเหลือและลดการเผชิญเหตุเพียงลำพัง", effects: { health: 1, happiness: 2 }, deathChance: .03 },
+        { label: "ฝ่าพื้นที่เสี่ยงโดยไม่รอความช่วยเหลือ", outcome: "การตัดสินใจนี้ทำให้คุณเผชิญความเสี่ยงสูง แม้ตั้งใจจะจัดการเหตุการณ์ด้วยตัวเอง", effects: { health: -18, happiness: -5 }, deathChance: .24 }
+      ] };
+      const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+      const wealthStart = profile.wealth === "รายได้สูง" ? 72 : profile.wealth === "ปานกลาง" ? 56 : 40;
+      const state = {
+        age: 5,
+        endAge: Math.max(55, Math.min(105, country.life + randomInt(0, 12))),
+        yearOfBirth: 2026,
+        eventCount: 0,
+        lastScenario: null,
+        ended: false,
+        cash: profile.wealth === "รายได้สูง" ? 3600 : profile.wealth === "ปานกลาง" ? 1300 : 450,
+        monthlyIncome: 0,
+        monthlyExpenses: 0,
+        occupation: null,
+        pendingOccupation: null,
+        workStyle: null,
+        careerChosen: false,
+        educationChoice: null,
+        partTime: false,
+        stats: {
+          money: wealthStart,
+          health: Math.round(Math.max(35, Math.min(85, 50 + (country.life - 60) * 1.25))),
+          skills: Math.round(Math.max(35, Math.min(85, country.literacy * .55 + country.internet * .2 + 20))),
+          happiness: 60
+        }
+      };
+
+      $("gameLocation").textContent = `${country.flag || "🌍"} ${country.name} · ${profile.gender} · ${profile.wealth} · เกิดปี ${state.yearOfBirth}`;
+      $("familySummary").textContent = `คุณเริ่มต้นชีวิตในครอบครัว${profile.wealth === "รายได้สูง" ? "ที่มีรายได้สูง" : profile.wealth === "ปานกลาง" ? "ชนชั้นกลาง" : "รายได้น้อย"}ที่${country.name} การเรียนต่อและทางเลือกอาชีพจะมีผลต่อเรื่องราวจำลอง`;
+      $("lifespanHint").textContent = `อายุคาดเฉลี่ยแรกเกิดของประเทศประมาณ ${country.life} ปี อายุสิ้นสุดในเกมสุ่มเพิ่มเพื่อให้ได้จำลองช่วงชีวิตที่ยาวขึ้น ไม่ใช่คำทำนายอายุจริง`;
+
+      const numberFormat = new Intl.NumberFormat("th-TH", { maximumFractionDigits: 0 });
+      function getMonthlyBudget(age) {
+        if (age < 18) {
+          const familyIncome = profile.wealth === "รายได้สูง" ? 220 : profile.wealth === "ปานกลาง" ? 110 : 45;
+          const familyExpenses = profile.wealth === "รายได้สูง" ? 115 : profile.wealth === "ปานกลาง" ? 68 : 32;
+          return {
+            income: familyIncome + (state.partTime ? 260 : 0) + (state.occupation?.salary || 0),
+            expenses: familyExpenses
+          };
+        }
+        if (!state.occupation) {
+          const support = profile.wealth === "รายได้สูง" ? 260 : profile.wealth === "ปานกลาง" ? 180 : 130;
+          const expenses = profile.wealth === "รายได้สูง" ? 250 : profile.wealth === "ปานกลาง" ? 180 : 170;
+          return { income: support + (state.partTime ? 260 : 0), expenses };
+        }
+        if (age >= 65) return { income: Math.round(state.monthlyIncome * .42), expenses: Math.round(state.monthlyExpenses * .78) };
+        return { income: state.monthlyIncome, expenses: state.monthlyExpenses };
+      }
+      function updateWallet() {
+        const budget = getMonthlyBudget(state.age);
+        $("monthlyIncome").textContent = `${numberFormat.format(budget.income)} เครดิต`;
+        $("monthlyExpenses").textContent = `${numberFormat.format(budget.expenses)} เครดิต`;
+        $("cashBalance").textContent = `${numberFormat.format(state.cash)} เครดิต`;
+        $("walletNote").textContent = state.age < 18
+          ? `รายรับจำลองจากครอบครัว${state.partTime ? "และงานพาร์ตไทม์" : ""} · คิดรายรับ/รายจ่ายตามช่วงเวลาที่เดินในเกม`
+          : state.age >= 65
+            ? "รายรับหลังเกษียณและค่าใช้จ่ายเป็นค่าจำลองในเกม"
+            : state.occupation
+              ? `${state.occupation.role} · ${state.workStyle.name} · รายรับอาจเปลี่ยนตามทางเลือก`
+              : "ยังไม่มีงานประจำ · ค่าใช้จ่ายดำเนินต่อไปในเกม";
+      }
+      function updateStats() {
+        for (const [key, value] of Object.entries(state.stats)) {
+          $(`${key}Value`).textContent = `${value}/100`;
+          $(`${key}Bar`).style.width = `${value}%`;
+        }
+        updateWallet();
+      }
+      function updateProgress() {
+        const percent = Math.min(100, Math.round(state.age / state.endAge * 100));
+        const year = state.yearOfBirth + state.age;
+        $("gameAge").textContent = `${state.age} ปี · ${year}`;
+        $("roundLabel").textContent = `ปีจำลอง ${year} · เหตุการณ์ที่ ${state.eventCount}`;
+        $("roundPercent").textContent = `${percent}%`;
+        $("roundBar").style.width = `${percent}%`;
+        $("lifeGridCount").textContent = `${state.age} / ${state.endAge} ปี`;
+        drawAvatar(state.age);
+        const activity = state.age < 13
+          ? "กำลังเรียนรู้และเติบโต"
+          : state.age < 18
+            ? "ชีวิตในโรงเรียนและการเตรียมอนาคต"
+            : state.age < 65 && state.occupation
+              ? `ทำงานเป็น${state.occupation.role}`
+              : state.age >= 65
+                ? "ใช้ชีวิตหลังวัยทำงาน"
+                : "กำลังค้นหาเส้นทางอาชีพ";
+        $("sceneCaption").textContent = `ชุมชนจำลองใน${country.name} · อายุ ${state.age} ปี · ${activity}`;
+        const grid = $("lifeGrid");
+        if (!grid.childElementCount) {
+          const cells = document.createDocumentFragment();
+          for (let age = 0; age < state.endAge; age += 1) {
+            const cell = document.createElement("span");
+            cell.className = "life-cell";
+            cell.setAttribute("aria-hidden", "true");
+            cells.append(cell);
+          }
+          grid.append(cells);
+        }
+        [...grid.children].forEach((cell, age) => {
+          cell.classList.toggle("past", age < state.age);
+          cell.classList.toggle("current", age === state.age);
+        });
+      }
+      function appendLog(age, title, detail) {
+        const entry = document.createElement("div");
+        entry.className = "life-log-entry";
+        const heading = document.createElement("p");
+        heading.className = "thai text-xs font-semibold text-slate-200";
+        heading.textContent = `อายุ ${age} ปี · ${title}`;
+        const description = document.createElement("p");
+        description.className = "thai mt-1 text-xs leading-5 text-slate-400";
+        description.textContent = detail;
+        entry.append(heading, description);
+        const log = $("lifeLog");
+        log.append(entry);
+        log.scrollTop = log.scrollHeight;
+      }
+      function endLife(reason) {
+        state.ended = true;
+        $("scenarioCard").classList.add("hidden");
+        $("gameFeedback").classList.add("hidden");
+        const percent = Math.min(100, Math.round(state.age / state.endAge * 100));
+        $("roundLabel").textContent = `ชีวิตจำลองสิ้นสุด · อายุ ${state.age} ปี`;
+        $("roundPercent").textContent = `${percent}%`;
+        $("roundBar").style.width = `${percent}%`;
+        const finalJob = state.occupation ? ` อาชีพสุดท้าย: ${state.occupation.role}${state.workStyle ? ` (${state.workStyle.name})` : ""}.` : "";
+        $("summaryText").textContent = `คุณใช้ชีวิตจำลอง ${state.age} ปีใน${country.name} และพบ ${state.eventCount} เหตุการณ์ ${reason}${finalJob} เงินคงเหลือ ${numberFormat.format(state.cash)} เครดิตจำลอง · สถานะสุดท้าย: สุขภาพ ${state.stats.health} · ความสุข ${state.stats.happiness} · ความรู้ ${state.stats.skills} · ความมั่นคง ${state.stats.money} คะแนนในเกมนี้เป็นเพียงภาพจำลอง ไม่ใช่การประเมินชีวิตจริง`;
+        $("gameSummary").classList.remove("hidden");
+        appendLog(state.age, "สิ้นสุดชีวิตจำลอง", reason);
+        updateProgress();
+      }
+      function getScenario() {
+        if (state.age >= 18 && !state.careerChosen) return careerScenario;
+        if (state.age >= 15 && state.age <= 20 && profile.wealth === "รายได้น้อย" && !state.educationChoice) return educationChoiceScenario;
+        if (Math.random() < .07) return emergencyScenario;
+        const available = scenarios.filter(scenario =>
+          state.age >= scenario.minAge
+          && state.age <= scenario.maxAge
+          && (!scenario.work || state.careerChosen)
+        );
+        const ageAppropriate = state.age < 18 ? available.filter(scenario => scenario.school || scenario.family) : available;
+        const eventPool = ageAppropriate.length ? ageAppropriate : available;
+        const candidates = eventPool.filter(scenario => scenario !== state.lastScenario);
+        const pool = candidates.length ? candidates : eventPool;
+        const scenario = pool[randomInt(0, pool.length - 1)];
+        state.lastScenario = scenario;
+        return scenario;
+      }
+
+      function renderChoices(options, onChoose) {
+        const choices = $("scenarioChoices");
+        choices.replaceChildren();
+        options.forEach(option => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "pixel-button thai w-full border border-white/10 bg-white/[.035] px-4 py-3 text-left text-sm leading-6 text-slate-200 transition hover:border-cyan-200/30 hover:bg-cyan-200/[.07]";
+          const label = document.createElement("span");
+          label.className = "block font-semibold";
+          label.textContent = option.label;
+          button.append(label);
+          if (option.description) {
+            const detail = document.createElement("span");
+            detail.className = "thai mt-1 block text-xs leading-5 text-slate-400";
+            detail.textContent = option.description;
+            button.append(detail);
+          }
+          button.addEventListener("click", () => onChoose(option), { once: true });
+          choices.append(button);
+        });
+      }
+
+      function showOccupationChoices() {
+        $("scenarioType").textContent = "เลือกอาชีพ · สายงานที่สนใจ";
+        $("scenarioTitle").textContent = "อยากทำงานสายไหน?";
+        $("scenarioDescription").textContent = "เลือกจากอาชีพตัวอย่างที่พบได้ในชีวิตจริง ยังเปลี่ยนเส้นทางหรือเรียนรู้สายอื่นภายหลังได้";
+        renderChoices(occupations.map(occupation => ({
+          label: occupation.role,
+          description: `${occupation.name} · รายรับเริ่มต้น ${numberFormat.format(occupation.salary)} เครดิต/เดือน (ค่าจำลอง)`,
+          occupation
+        })), option => {
+          state.pendingOccupation = option.occupation;
+          $("scenarioType").textContent = `อาชีพที่สนใจ · ${option.occupation.name}`;
+          $("scenarioTitle").textContent = `เลือกรูปแบบการทำงานในสาย${option.occupation.name}`;
+          $("scenarioDescription").textContent = `คุณสนใจเป็น${option.occupation.role} แล้ว รูปแบบงานส่งผลต่อความสม่ำเสมอของรายรับ ค่าใช้จ่าย และเวลาพัก`;
+          renderChoices(workStyles.map(workStyle => ({
+            label: workStyle.name,
+            description: workStyle.description,
+            workStyle
+          })), styleOption => chooseOption(styleOption));
+        });
+      }
+
+      function showScenario() {
+        if (state.ended) return;
+        state.eventCount += 1;
+        state.currentScenario = getScenario();
+        updateProgress();
+        $("scenarioType").textContent = state.currentScenario.type;
+        $("scenarioTitle").textContent = state.currentScenario.title;
+        $("scenarioDescription").textContent = state.currentScenario.description(country);
+        if (state.currentScenario.career) {
+          showOccupationChoices();
+          return;
+        }
+        renderChoices(state.currentScenario.choices, chooseOption);
+      }
+
+      function chooseOption(choice) {
+        if (state.ended) return;
+        $("scenarioChoices").querySelectorAll("button").forEach(button => { button.disabled = true; });
+        let outcome = choice.outcome;
+        let effects = choice.effects;
+        if (choice.workStyle) {
+          const workStyle = choice.workStyle;
+          state.occupation = state.pendingOccupation;
+          state.workStyle = workStyle;
+          state.careerChosen = true;
+          state.monthlyIncome = Math.round(state.occupation.salary * workStyle.incomeRate);
+          state.monthlyExpenses = Math.round(220 + state.monthlyIncome * workStyle.expenseRate);
+          if (workStyle.startupCost) state.cash -= workStyle.startupCost;
+          outcome = `คุณเริ่มทำงานเป็น${state.occupation.role}ในรูปแบบ${workStyle.name} รายรับตั้งต้นประมาณ ${numberFormat.format(state.monthlyIncome)} เครดิต/เดือน และรายจ่ายจำลอง ${numberFormat.format(state.monthlyExpenses)} เครดิต/เดือน`;
+          effects = { ...state.occupation.effects, money: (state.occupation.effects.money || 0) + workStyle.stability };
+          state.pendingOccupation = null;
+        }
+        for (const [key, change] of Object.entries(effects || {})) {
+          state.stats[key] = Math.max(0, Math.min(100, state.stats[key] + change));
+        }
+        if (choice.cashChange) state.cash += choice.cashChange;
+        if (choice.incomeChange) {
+          state.monthlyIncome = Math.max(0, state.monthlyIncome + choice.incomeChange);
+          state.monthlyExpenses = Math.max(0, state.monthlyExpenses + Math.round(choice.incomeChange * .35));
+        }
+        if (choice.educationChoice) {
+          state.educationChoice = choice.educationChoice;
+          $("familySummary").textContent = `คุณเลือก ${choice.educationChoice}${choice.partTime ? " และทำงานพาร์ตไทม์" : ""} · เส้นทางการเรียนและงานสามารถเปลี่ยนได้ตามโอกาสในชีวิต`;
+          if (choice.partTime) state.partTime = true;
+          if (choice.earlyWork) {
+            state.occupation = { role: "พนักงานเริ่มต้น", salary: 520 };
+            state.monthlyIncome = 520;
+          }
+        }
+        updateStats();
+        appendLog(state.age, state.currentScenario.title, outcome);
+        $("feedbackText").textContent = outcome;
+        $("gameFeedback").classList.remove("hidden");
+        if (state.stats.health === 0) {
+          endLife("สุขภาพในเกมลดลงจนสิ้นสุดชีวิตจำลองก่อนอายุขัยที่สุ่มไว้");
+        } else if (choice.deathChance && Math.random() < choice.deathChance) {
+          endLife("เหตุฉุกเฉินครั้งนี้ทำให้ชีวิตจำลองสิ้นสุดลงก่อนวัยอันควร");
+        }
+      }
+      function continueLife() {
+        if (state.ended) return;
+        $("gameFeedback").classList.add("hidden");
+        const previousAge = state.age;
+        state.age = Math.min(state.endAge, state.age + randomInt(2, 5));
+        if (previousAge < 18 && state.age > 18 && !state.careerChosen) state.age = 18;
+        for (let year = previousAge + 1; year <= state.age; year += 1) {
+          const budget = getMonthlyBudget(year);
+          state.cash += (budget.income - budget.expenses) * 12;
+        }
+        if (state.age >= 55) state.stats.health = Math.max(0, state.stats.health - randomInt(0, 2));
+        updateStats();
+        updateProgress();
+        if (state.age >= state.endAge) {
+          endLife(`ชีวิตจำลองดำเนินมาถึงอายุ ${state.age} ปี ซึ่งเป็นช่วงสิ้นสุดที่สุ่มไว้สำหรับเกมนี้`);
+          return;
+        }
+        if (state.stats.health === 0 || (state.stats.health <= 8 && Math.random() < .16)) {
+          endLife("ภาวะสุขภาพในเกมทำให้ชีวิตจำลองสิ้นสุดลงก่อนอายุขัยที่สุ่มไว้");
+          return;
+        }
+        showScenario();
+      }
+      $("continueGameBtn").addEventListener("click", continueLife);
+      $("replayGameBtn").addEventListener("click", () => window.location.reload());
+      appendLog(0, "เริ่มต้นชีวิต", `คุณเกิดมาเป็น${profile.gender}ใน${country.name} ในครอบครัว${profile.wealth}`);
+      appendLog(state.age, "วัยเด็ก", "เรื่องราวจำลองเริ่มต้นขึ้นและเวลาจะค่อย ๆ เดินหน้าไปตามการตัดสินใจ");
+      updateStats();
+      updateProgress();
+      showScenario();
+    }
+  </script>
+  <script src="site-controls.js"></script>
+</body>
+</html>

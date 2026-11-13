@@ -1,0 +1,161 @@
+.site-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.site-control {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .045);
+  padding: 8px 11px;
+  color: #d3ddf2;
+  font-size: 12px;
+  line-height: 1.35;
+  text-decoration: none;
+  transition: background .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.site-control:hover {
+  border-color: rgba(102, 228, 237, .4);
+  background: rgba(102, 228, 237, .09);
+}
+
+.site-control:focus-visible {
+  outline: 2px solid #78e5eb;
+  outline-offset: 3px;
+}
+
+body[data-theme="light"] {
+  color-scheme: light;
+  color: #1d2b45;
+  background: radial-gradient(ellipse at 50% -18%, rgba(57, 134, 196, .22), transparent 48%), linear-gradient(145deg, #cbd9e8, #dce5ef 52%, #c7d6e6);
+}
+
+body[data-theme="light"] .stars {
+  opacity: .18;
+}
+
+body[data-theme="light"] .glass {
+  border-color: rgba(71, 103, 148, .2);
+  background: linear-gradient(145deg, rgba(255, 255, 255, .94), rgba(240, 247, 255, .94));
+  box-shadow: 0 24px 70px rgba(48, 71, 105, .12), inset 0 1px 0 rgba(255,255,255,.8);
+}
+
+body[data-theme="light"] .life-panel,
+body[data-theme="light"] .stat-card,
+body[data-theme="light"] .pixel-card {
+  border-color: rgba(71, 103, 148, .2);
+  background-color: rgba(255, 255, 255, .78);
+  color: #263650;
+}
+
+body[data-theme="light"] .pixel-card-title {
+  background: #8c2345;
+  color: #fff;
+}
+
+body[data-theme="light"] .eyebrow {
+  color: #536987;
+}
+
+body[data-theme="light"] .text-white { color: #1d2b45; }
+body[data-theme="light"] .text-slate-200 { color: #334864; }
+body[data-theme="light"] .text-slate-300 { color: #405673; }
+body[data-theme="light"] .text-slate-400 { color: #526985; }
+body[data-theme="light"] .text-slate-500 { color: #61758f; }
+body[data-theme="light"] .text-slate-600 { color: #6b7e96; }
+body[data-theme="light"] .text-cyan-100 { color: #17637a; }
+body[data-theme="light"] .text-cyan-200 { color: #17637a; }
+body[data-theme="light"] .text-violet-300 { color: #624ca7; }
+
+body[data-theme="light"] .border-white\/10,
+body[data-theme="light"] .border-white\/\[\.07\],
+body[data-theme="light"] .border-white\/\[\.06\] {
+  border-color: rgba(71, 103, 148, .18);
+}
+
+body[data-theme="light"] .bg-white\/\[\.035\],
+body[data-theme="light"] .bg-white\/\[\.045\],
+body[data-theme="light"] .bg-white\/\[\.06\] {
+  background-color: rgba(75, 111, 158, .07);
+}
+
+body[data-theme="light"] .progress-track,
+body[data-theme="light"] .game-stat-track {
+  background: rgba(66, 94, 132, .14);
+}
+
+body[data-theme="light"] .site-control {
+  border-color: rgba(59, 84, 119, .2);
+  background: rgba(255, 255, 255, .7);
+  color: #263650;
+}
+
+body[data-theme="light"] .site-control:hover {
+  border-color: rgba(25, 129, 151, .45);
+  background: rgba(102, 228, 237, .15);
+}
+
+body.lobby-page[data-theme="light"] .glass {
+  border: 1px solid rgba(67, 98, 137, .48);
+  background: linear-gradient(145deg, #fff, #f8fbff);
+  box-shadow: 0 24px 70px rgba(38, 65, 98, .24), inset 0 1px 0 #fff;
+}
+
+body.lobby-page[data-theme="light"] .eyebrow {
+  color: #385b85;
+}
+
+body.lobby-page[data-theme="light"] #statusLine {
+  color: #405d7d;
+}
+
+body.lobby-page[data-theme="light"] #counter {
+  color: #142b4b;
+}
+
+body.lobby-page[data-theme="light"] #generateBtn,
+body.lobby-page[data-theme="light"] #againBtn,
+body.lobby-page[data-theme="light"] #startGameBtn,
+body.lobby-page[data-theme="light"] #continueGameBtn,
+body.lobby-page[data-theme="light"] #newLifeBtn {
+  background-image: linear-gradient(110deg, #20c9dc, #3c8ee8);
+  color: #071d36;
+  box-shadow: 0 9px 28px rgba(25, 137, 194, .28);
+}
+
+body.lobby-page[data-theme="dark"] .glass {
+  border-color: rgba(107, 160, 223, .3);
+  background: linear-gradient(145deg, rgba(18, 30, 55, .97), rgba(9, 17, 34, .97));
+  box-shadow: 0 24px 80px rgba(0,0,0,.38), inset 0 1px 0 rgba(190,218,255,.08);
+}
+
+body.lobby-page[data-theme="dark"] #statusLine {
+  color: #b7c8e3;
+}
+
+body.lobby-page[data-theme="dark"] #counter {
+  color: #f2f6ff;
+}
+
+body.lobby-page[data-theme="dark"] #generateBtn,
+body.lobby-page[data-theme="dark"] #againBtn,
+body.lobby-page[data-theme="dark"] #startGameBtn,
+body.lobby-page[data-theme="dark"] #continueGameBtn,
+body.lobby-page[data-theme="dark"] #newLifeBtn {
+  background-image: linear-gradient(110deg, #43d5e6, #648cf2);
+  color: #071526;
+  box-shadow: 0 9px 30px rgba(54, 158, 216, .24);
+}
+
+@media (max-width: 640px) {
+  .site-controls { gap: 6px; }
+  .site-control { min-height: 36px; padding: 7px 9px; font-size: 11px; }
+}

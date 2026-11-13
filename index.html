@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070b16">
+  <meta name="description" content="เกมจำลองการสุ่มเกิดเป็นมนุษย์บนโลก เรียนรู้สถิติประชากรผ่านชีวิตหนึ่งชีวิต">
+  <title>สุ่มเกิดบนโลก — One Life, One World</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { color-scheme: dark; --ink: #edf2ff; --muted: #8d98b5; --cyan: #66e4ed; --violet: #9c8bff; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--ink);
+      background: radial-gradient(ellipse at 50% -18%, rgba(62, 79, 156, .26), transparent 49%), #070b16;
+      font-family: "DM Sans", "Noto Sans Thai", sans-serif;
+    }
+    .thai { font-family: "Noto Sans Thai", sans-serif; }
+    .stars { position: fixed; inset: 0; pointer-events: none; opacity: .44; z-index: -1;
+      background-image: radial-gradient(1px 1px at 9% 21%, #d7eaff 50%, transparent), radial-gradient(1px 1px at 77% 12%, #d7eaff 50%, transparent), radial-gradient(1px 1px at 88% 63%, #a9bdff 50%, transparent), radial-gradient(1px 1px at 19% 73%, #d7eaff 50%, transparent), radial-gradient(1px 1px at 62% 86%, #a9bdff 50%, transparent);
+      background-size: 290px 260px;
+    }
+    .glass { background: linear-gradient(145deg, rgba(20, 28, 50, .79), rgba(11, 16, 31, .76)); border: 1px solid rgba(151, 174, 255, .14); box-shadow: 0 24px 80px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.035); backdrop-filter: blur(18px); }
+    .eyebrow { color: #a9b5d3; letter-spacing: .19em; }
+    .earth-wrap { position: relative; width: 220px; height: 220px; margin: 0 auto; display: grid; place-items: center; }
+    .earth-glow { position: absolute; width: 180px; height: 180px; border-radius: 50%; background: rgba(57, 178, 227, .19); filter: blur(35px); }
+    .earth { position: relative; width: 154px; height: 154px; border-radius: 50%; overflow: hidden; border: 1px solid rgba(158,223,255,.6); box-shadow: 0 0 35px rgba(75, 181, 232, .3), inset -18px -8px 26px rgba(2, 8, 24, .72), inset 8px 5px 16px rgba(208,242,255,.16); background: radial-gradient(ellipse at 31% 29%, #97e9f2 0 2%, transparent 3%), radial-gradient(ellipse at 34% 39%, #5fdfba 0 9%, transparent 10%), radial-gradient(ellipse at 70% 66%, #4fae90 0 15%, transparent 16%), radial-gradient(ellipse at 58% 27%, #58c4a4 0 11%, transparent 12%), radial-gradient(circle at 35% 35%, #327fc0, #12457a 55%, #092246 78%); }
+    .earth::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,.08) 49%, transparent 67%); }
+    .orbit { position: absolute; inset: 9px; border: 1px solid rgba(137, 196, 255, .2); border-radius: 50%; transform: rotate(-24deg) scaleY(.42); }
+    .orbit::after { content: ""; position: absolute; top: 50%; left: -4px; width: 8px; height: 8px; border-radius: 50%; background: #91f3ee; box-shadow: 0 0 12px #91f3ee; }
+    .scanning { animation: scan 1.4s linear infinite, pulse 1.1s ease-in-out infinite alternate; }
+    .scanning .earth { animation: spin 3s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes scan { to { transform: rotate(360deg); } }
+    @keyframes pulse { to { filter: brightness(1.35); } }
+    @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    .reveal { animation: rise .55s cubic-bezier(.2,.8,.2,1) both; }
+    .number { font-variant-numeric: tabular-nums; }
+    .progress-track { height: 6px; border-radius: 999px; overflow: hidden; background: rgba(148,163,184,.13); }
+    .progress-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #5fd6db, #8b8bff); transition: width .8s ease; }
+    .result-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+    .stat-card { min-width: 0; border: 1px solid rgba(155,174,225,.1); background: rgba(9,14,28,.52); border-radius: 16px; padding: 15px; }
+    .choice-button { width: 100%; text-align: left; }
+    .game-stat { min-width: 0; }
+    .game-stat-track { height: 5px; border-radius: 999px; overflow: hidden; background: rgba(148,163,184,.13); }
+    .game-stat-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #5fd6db, #8b8bff); transition: width .45s ease; }
+    .life-layout { display: grid; grid-template-columns: minmax(150px, .82fr) minmax(0, 1.65fr) minmax(170px, .9fr); gap: 14px; align-items: start; }
+    .life-panel { min-width: 0; border: 1px solid rgba(155,174,225,.1); background: rgba(9,14,28,.42); border-radius: 16px; padding: 15px; }
+    .life-log { max-height: 390px; overflow-y: auto; }
+    .life-log-entry { border-left: 2px solid rgba(102,228,237,.35); padding: 0 0 15px 12px; }
+    .life-log-entry:last-child { padding-bottom: 0; }
+    .life-grid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 3px; }
+    .life-cell { aspect-ratio: 1; border-radius: 3px; background: rgba(148,163,184,.13); }
+    .life-cell.current { outline: 2px solid #78e5eb; outline-offset: -2px; background: rgba(95,214,219,.28); }
+    .life-cell.past { background: rgba(95,214,219,.48); }
+    .muted { color: var(--muted); }
+    button:focus-visible { outline: 2px solid #78e5eb; outline-offset: 4px; }
+    @media (max-width: 640px) {
+      .earth-wrap { width: 184px; height: 184px; }
+      .earth { width: 132px; height: 132px; }
+      .result-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; }
+      .stat-card { padding: 12px; }
+      .life-layout { grid-template-columns: 1fr; }
+      .life-log { max-height: 300px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+  <link rel="stylesheet" href="site-controls.css">
+</head>
+<body class="lobby-page antialiased">
+  <div class="stars" aria-hidden="true"></div>
+  <div class="mx-auto max-w-6xl px-5 pb-12 sm:px-8">
+    <header class="flex items-center justify-between py-6">
+      <a href="#" class="flex items-center gap-3 no-underline text-inherit" aria-label="กลับสู่หน้าหลัก">
+        <span class="grid h-10 w-10 place-items-center rounded-xl border border-cyan-200/20 bg-cyan-300/10 text-xl">✦</span>
+        <span><span class="block text-sm font-semibold tracking-wide">ONE LIFE, ONE WORLD</span><span class="thai block text-[11px] text-slate-400">สุ่มหนึ่งชีวิตจากประชากรโลก</span></span>
+      </a>
+      <div class="hidden items-center gap-2 rounded-full border border-white/10 bg-white/[.035] px-3 py-2 text-xs text-slate-400 sm:flex">
+        <span class="h-1.5 w-1.5 rounded-full bg-emerald-300"></span> LIFE SIMULATOR <span class="mx-1 text-slate-600">·</span> v1.0
+      </div>
+      <div class="site-controls" aria-label="การตั้งค่าหน้าจอ">
+        <button id="musicToggle" class="site-control thai" type="button" aria-pressed="false">♫ เพลง: ปิด</button>
+        <button id="themeToggle" class="site-control thai" type="button" aria-pressed="false">☀️ โหมดสว่าง</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="mx-auto max-w-3xl pt-7 text-center sm:pt-12">
+        <p class="eyebrow thai text-[10px] font-semibold uppercase sm:text-xs">A SMALL CHANCE. A WHOLE LIFE.</p>
+        <h1 class="thai mt-4 text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">ถ้าคุณได้เกิดใหม่<br class="sm:hidden"> <span class="bg-gradient-to-r from-cyan-200 to-violet-300 bg-clip-text text-transparent">บนโลกใบนี้</span></h1>
+        <p class="thai mx-auto mt-4 max-w-xl text-sm leading-7 text-slate-400 sm:text-base">สุ่มจุดเริ่มต้นชีวิตจากผู้คนทั่วโลก<br class="hidden sm:block">จากนั้นไปใช้ชีวิตต่อในหน้าเหตุการณ์จำลอง</p>
+      </section>
+
+      <section class="glass mx-auto mt-9 max-w-3xl overflow-hidden rounded-[26px] sm:mt-12" aria-label="สุ่มเกิดใหม่">
+        <div class="px-5 pb-7 pt-7 text-center sm:px-10 sm:pb-9 sm:pt-9">
+          <div id="earthWrap" class="earth-wrap" aria-hidden="true">
+            <div class="earth-glow"></div><div class="orbit"></div><div class="earth"></div>
+          </div>
+          <div class="thai -mt-1 text-xs text-slate-400" id="statusLine" aria-live="polite">โลกมีผู้คนมากมาย และทุกชีวิตเริ่มต้นไม่เหมือนกัน</div>
+          <div class="number mt-3 text-3xl font-semibold tracking-wide text-white sm:text-4xl" id="counter">8,000,000,000<span class="thai ml-2 text-sm font-normal text-slate-500">ชีวิต</span></div>
+          <button id="generateBtn" type="button" class="thai mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-300 to-sky-400 px-7 py-3 text-sm font-semibold text-slate-950 shadow-[0_8px_30px_rgba(70,199,219,.18)] transition hover:-translate-y-0.5 hover:brightness-110 disabled:cursor-wait disabled:opacity-70 sm:px-9">
+            <span aria-hidden="true">✦</span><span>สุ่มเกิดและเริ่มใช้ชีวิต</span>
+          </button>
+          <div class="thai mt-3 text-xs text-slate-500">
+            <span aria-hidden="true">♫</span> เปิดเสียงเอฟเฟกต์อัตโนมัติ · สุ่มใหม่ได้ทุกเมื่อ
+          </div>
+        </div>
+      </section>
+
+      <section id="resultSection" class="mx-auto mt-6 hidden max-w-3xl" aria-live="polite" aria-label="ผลการสุ่ม">
+        <article class="glass overflow-hidden rounded-[26px]">
+          <div class="border-b border-white/[.07] px-5 py-5 sm:px-8">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p class="eyebrow thai text-[10px] font-semibold">YOUR LIFE PROFILE</p>
+                <h2 class="thai mt-2 text-xl font-semibold sm:text-2xl">ชีวิตหนึ่งชีวิต เริ่มต้นขึ้นแล้ว</h2>
+              </div>
+              <div id="flag" class="grid h-14 w-16 place-items-center rounded-2xl border border-white/10 bg-white/[.045] text-3xl" aria-label="ธงชาติ"></div>
+            </div>
+            <div class="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h3 id="countryName" class="thai text-lg font-semibold"></h3>
+              <span id="regionName" class="thai rounded-full border border-cyan-200/15 bg-cyan-200/[.07] px-2.5 py-1 text-[11px] text-cyan-100"></span>
+            </div>
+            <p id="story" class="thai mt-3 text-sm leading-7 text-slate-300"></p>
+          </div>
+          <div class="px-5 py-5 sm:px-8 sm:py-6">
+            <p class="eyebrow thai mb-3 text-[10px] font-semibold">จุดเริ่มต้นของชีวิต</p>
+            <div class="result-grid">
+              <div class="stat-card"><p class="thai text-xs text-slate-500">เพศที่สุ่มได้</p><p id="gender" class="thai mt-2 text-base font-semibold"></p></div>
+              <div class="stat-card"><p class="thai text-xs text-slate-500">ฐานะครอบครัว*</p><p id="wealth" class="thai mt-2 text-base font-semibold"></p></div>
+              <div class="stat-card"><p class="thai text-xs text-slate-500">ประชากรประเทศ</p><p id="countryShare" class="number mt-2 text-base font-semibold"></p></div>
+              <div class="stat-card"><p class="thai text-xs text-slate-500">อายุคาดเฉลี่ยแรกเกิด</p><p id="life" class="number mt-2 text-base font-semibold"></p></div>
+              <div class="stat-card"><p class="thai text-xs text-slate-500">อัตรารู้หนังสือ*</p><p id="literacy" class="number mt-2 text-base font-semibold"></p></div>
+              <div class="stat-card"><p class="thai text-xs text-slate-500">เข้าถึงอินเทอร์เน็ต*</p><p id="internet" class="number mt-2 text-base font-semibold"></p></div>
+            </div>
+            <div class="mt-5 rounded-2xl border border-violet-200/10 bg-violet-300/[.045] p-4 sm:p-5">
+              <div class="flex flex-wrap items-end justify-between gap-2">
+                <div><p class="thai text-xs text-slate-400">สัดส่วนผู้คนในภูมิภาคที่สุ่มได้</p><p id="regionShare" class="number mt-1 text-2xl font-semibold text-cyan-100"></p></div>
+                <p class="thai max-w-[190px] text-right text-[11px] leading-5 text-slate-500">จากประชากรโลกประมาณ 8.2 พันล้านคน</p>
+              </div>
+              <div class="progress-track mt-3"><div id="regionBar" class="progress-fill" style="width:0%"></div></div>
+              <p id="regionNote" class="thai mt-2 text-[11px] leading-5 text-slate-500"></p>
+            </div>
+            <div class="thai mt-4 flex gap-3 rounded-xl border border-amber-200/10 bg-amber-200/[.035] p-3.5 text-xs leading-6 text-slate-400">
+              <span class="text-amber-200" aria-hidden="true">ⓘ</span>
+              <p><span class="font-medium text-slate-300">สถิติเป็นค่าประมาณ</span> และอาจต่างกันตามแหล่งข้อมูลและปีที่เก็บ อายุคาดเฉลี่ยเป็นค่าเฉลี่ยระดับประเทศ ไม่ใช่คำทำนายรายบุคคล ส่วนฐานะครอบครัวและเพศเป็นการสุ่มเพื่อการเรียนรู้ ไม่ใช่สัดส่วนเฉพาะประเทศ</p>
+            </div>
+            <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
+              <p id="rollNumber" class="thai text-xs text-slate-500"></p>
+              <div class="flex flex-wrap gap-2">
+                <button id="startGameBtn" type="button" class="thai inline-flex min-h-11 items-center gap-2 rounded-xl bg-cyan-200 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:brightness-110">▶ เริ่มจำลองชีวิต</button>
+                <button id="againBtn" type="button" class="thai inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-white/[.045] px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-200/30 hover:bg-cyan-200/[.07]">↻ สุ่มเกิดใหม่อีกครั้ง</button>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section id="gameSection" class="mx-auto mt-6 hidden max-w-6xl" aria-live="polite" aria-label="เกมจำลองชีวิต">
+        <article class="glass overflow-hidden rounded-[26px]">
+          <div class="border-b border-white/[.07] px-5 py-5 sm:px-8">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p class="eyebrow thai text-[10px] font-semibold">YOUR LIFE SIMULATION</p>
+                <h2 class="thai mt-2 text-xl font-semibold sm:text-2xl">จำลองชีวิตไปจนถึงช่วงสุดท้าย</h2>
+                <p id="gameLocation" class="thai mt-2 text-sm text-slate-400"></p>
+              </div>
+              <div class="rounded-xl border border-cyan-200/15 bg-cyan-200/[.06] px-3 py-2 text-center">
+                <p class="thai text-[10px] text-slate-400">อายุ · ปีจำลอง</p>
+                <p id="gameAge" class="thai text-sm font-semibold text-cyan-100">0 ปี</p>
+              </div>
+            </div>
+            <div class="mt-5">
+              <div class="mb-2 flex justify-between text-xs text-slate-400">
+                <span id="roundLabel" class="thai">ชีวิตจำลอง · กำลังเริ่มต้น</span>
+                <span id="roundPercent" class="number">0%</span>
+              </div>
+              <div class="progress-track"><div id="roundBar" class="progress-fill" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="px-5 py-5 sm:px-8 sm:py-6">
+            <div class="life-layout">
+              <aside class="life-panel">
+                <h3 class="thai mb-4 text-sm font-semibold">สถานะชีวิต <span class="text-[10px] font-normal text-slate-500">0–100</span></h3>
+                <div id="gameStats" class="grid gap-4">
+                  <div class="game-stat"><div class="mb-1 flex justify-between text-xs"><span class="thai text-slate-400">สุขภาพ</span><span id="healthValue" class="number text-slate-300"></span></div><div class="game-stat-track"><div id="healthBar" class="game-stat-fill"></div></div></div>
+                  <div class="game-stat"><div class="mb-1 flex justify-between text-xs"><span class="thai text-slate-400">ความสุข</span><span id="happinessValue" class="number text-slate-300"></span></div><div class="game-stat-track"><div id="happinessBar" class="game-stat-fill"></div></div></div>
+                  <div class="game-stat"><div class="mb-1 flex justify-between text-xs"><span class="thai text-slate-400">ความรู้</span><span id="skillsValue" class="number text-slate-300"></span></div><div class="game-stat-track"><div id="skillsBar" class="game-stat-fill"></div></div></div>
+                  <div class="game-stat"><div class="mb-1 flex justify-between text-xs"><span class="thai text-slate-400">การเงิน</span><span id="moneyValue" class="number text-slate-300"></span></div><div class="game-stat-track"><div id="moneyBar" class="game-stat-fill"></div></div></div>
+                </div>
+                <p id="lifespanHint" class="thai mt-4 border-t border-white/[.06] pt-3 text-[11px] leading-5 text-slate-500"></p>
+              </aside>
+              <div class="min-w-0">
+                <div id="scenarioCard" class="life-panel">
+                  <p id="scenarioType" class="thai text-xs font-medium text-cyan-200"></p>
+                  <h3 id="scenarioTitle" class="thai mt-2 text-lg font-semibold"></h3>
+                  <p id="scenarioDescription" class="thai mt-2 text-sm leading-7 text-slate-300"></p>
+                  <div id="scenarioChoices" class="mt-5 grid gap-3"></div>
+                </div>
+                <div id="gameFeedback" class="hidden life-panel mt-3" role="status">
+                  <p class="thai text-xs font-semibold text-cyan-100">ผลจากการตัดสินใจ</p>
+                  <p id="feedbackText" class="thai mt-2 text-sm leading-7 text-slate-300"></p>
+                  <button id="continueGameBtn" type="button" class="thai mt-4 inline-flex min-h-11 items-center rounded-xl bg-cyan-200 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:brightness-110">เดินหน้าต่อ →</button>
+                </div>
+                <div id="gameSummary" class="hidden life-panel mt-3">
+                  <p class="eyebrow thai text-[10px] font-semibold">SIMULATION COMPLETE</p>
+                  <h3 id="summaryTitle" class="thai mt-2 text-lg font-semibold">เรื่องราวจำลองของคุณ</h3>
+                  <p id="summaryText" class="thai mt-2 text-sm leading-7 text-slate-300"></p>
+                  <div class="mt-4 flex flex-wrap gap-2">
+                    <button id="replayGameBtn" type="button" class="thai inline-flex min-h-11 items-center rounded-xl bg-cyan-200 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:brightness-110">↻ เล่นชีวิตนี้อีกครั้ง</button>
+                    <button id="newLifeBtn" type="button" class="thai inline-flex min-h-11 items-center rounded-xl border border-white/10 bg-white/[.045] px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-200/30">สุ่มชีวิตใหม่</button>
+                  </div>
+                </div>
+                <div class="life-panel mt-3">
+                  <div class="mb-3 flex items-center justify-between">
+                    <h3 class="thai text-sm font-semibold">บันทึกชีวิต</h3>
+                    <span class="thai text-[10px] text-slate-500">เหตุการณ์ที่คุณพบ</span>
+                  </div>
+                  <div id="lifeLog" class="life-log space-y-3" aria-live="polite"></div>
+                </div>
+              </div>
+              <aside class="grid gap-3">
+                <div class="life-panel">
+                  <h3 class="thai text-sm font-semibold">ครอบครัวและชีวิต</h3>
+                  <p id="familySummary" class="thai mt-3 text-xs leading-6 text-slate-400"></p>
+                </div>
+                <div class="life-panel">
+                  <div class="mb-3 flex items-center justify-between gap-2">
+                    <h3 class="thai text-sm font-semibold">แผนที่ชีวิต</h3>
+                    <span id="lifeGridCount" class="thai text-[10px] text-slate-500">0 ปี</span>
+                  </div>
+                  <div id="lifeGrid" class="life-grid" aria-label="แผนภาพอายุจำลอง"></div>
+                  <p class="thai mt-3 text-[10px] leading-5 text-slate-500">หนึ่งช่องแทนอายุประมาณ 1 ปี</p>
+                </div>
+              </aside>
+            </div>
+            <p class="thai mt-5 border-t border-white/[.06] pt-4 text-[11px] leading-6 text-slate-500">เหตุการณ์และผลลัพธ์เป็นเรื่องสมมุติเพื่อความสนุก อายุขัยจำลองเป็นค่าประมาณเชิงเกม ไม่ใช่การทำนายอายุหรือชะตาชีวิตของบุคคลจริง และไม่ใช่ทุกคนในประเทศจะมีประสบการณ์เหมือนกัน</p>
+          </div>
+        </article>
+      </section>
+    </main>
+    <footer class="thai mx-auto mt-8 max-w-3xl text-center text-[11px] leading-6 text-slate-600">
+      ประสบการณ์เชิงการศึกษา · ไม่ใช่ข้อมูลประชากรแบบเรียลไทม์หรือการประเมินโอกาสชีวิตจริง<br>
+      *ข้อมูลรายประเทศเป็นค่าประมาณแบบปัดเศษ เพื่อประกอบการจำลองเท่านั้น
+    </footer>
+  </div>
+
+  <script>
+    "use strict";
+    const WORLD_POPULATION = 8200;
+    const regionLabels = { asia: "เอเชีย", africa: "แอฟริกา", europe: "ยุโรป", americas: "อเมริกา", oceania: "โอเชียเนีย" };
+    const countries = [
+      { name: "อินเดีย", flag: "🇮🇳", region: "asia", pop: 1460, life: 68, literacy: 78, internet: 52 },
+      { name: "จีน", flag: "🇨🇳", region: "asia", pop: 1416, life: 78, literacy: 97, internet: 77 },
+      { name: "สหรัฐอเมริกา", flag: "🇺🇸", region: "americas", pop: 347, life: 77, literacy: 99, internet: 93 },
+      { name: "อินโดนีเซีย", flag: "🇮🇩", region: "asia", pop: 285, life: 72, literacy: 96, internet: 69 },
+      { name: "ปากีสถาน", flag: "🇵🇰", region: "asia", pop: 255, life: 67, literacy: 59, internet: 27 },
+      { name: "ไนจีเรีย", flag: "🇳🇬", region: "africa", pop: 238, life: 54, literacy: 62, internet: 40 },
+      { name: "บราซิล", flag: "🇧🇷", region: "americas", pop: 213, life: 76, literacy: 94, internet: 84 },
+      { name: "บังกลาเทศ", flag: "🇧🇩", region: "asia", pop: 175, life: 74, literacy: 75, internet: 45 },
+      { name: "รัสเซีย", flag: "🇷🇺", region: "europe", pop: 144, life: 73, literacy: 99, internet: 92 },
+      { name: "เอธิโอเปีย", flag: "🇪🇹", region: "africa", pop: 135, life: 66, literacy: 52, internet: 19 },
+      { name: "เม็กซิโก", flag: "🇲🇽", region: "americas", pop: 132, life: 75, literacy: 95, internet: 81 },
+      { name: "ญี่ปุ่น", flag: "🇯🇵", region: "asia", pop: 123, life: 84, literacy: 99, internet: 87 },
+      { name: "อียิปต์", flag: "🇪🇬", region: "africa", pop: 118, life: 71, literacy: 74, internet: 73 },
+      { name: "ฟิลิปปินส์", flag: "🇵🇭", region: "asia", pop: 117, life: 70, literacy: 97, internet: 67 },
+      { name: "สาธารณรัฐประชาธิปไตยคองโก", flag: "🇨🇩", region: "africa", pop: 112, life: 62, literacy: 77, internet: 19 },
+      { name: "เวียดนาม", flag: "🇻🇳", region: "asia", pop: 102, life: 74, literacy: 96, internet: 79 },
+      { name: "อิหร่าน", flag: "🇮🇷", region: "asia", pop: 92, life: 77, literacy: 89, internet: 79 },
+      { name: "ตุรกี", flag: "🇹🇷", region: "asia", pop: 88, life: 77, literacy: 97, internet: 86 },
+      { name: "ไทย", flag: "🇹🇭", region: "asia", pop: 72, life: 77, literacy: 94, internet: 89 },
+      { name: "เยอรมนี", flag: "🇩🇪", region: "europe", pop: 84, life: 81, literacy: 99, internet: 93 },
+      { name: "แทนซาเนีย", flag: "🇹🇿", region: "africa", pop: 70, life: 66, literacy: 82, internet: 32 },
+      { name: "สหราชอาณาจักร", flag: "🇬🇧", region: "europe", pop: 69, life: 81, literacy: 99, internet: 96 },
+      { name: "ฝรั่งเศส", flag: "🇫🇷", region: "europe", pop: 68, life: 82, literacy: 99, internet: 92 },
+      { name: "แอฟริกาใต้", flag: "🇿🇦", region: "africa", pop: 64, life: 66, literacy: 95, internet: 76 },
+      { name: "อิตาลี", flag: "🇮🇹", region: "europe", pop: 59, life: 83, literacy: 99, internet: 87 },
+      { name: "เคนยา", flag: "🇰🇪", region: "africa", pop: 57, life: 64, literacy: 83, internet: 40 },
+      { name: "เมียนมา", flag: "🇲🇲", region: "asia", pop: 55, life: 67, literacy: 89, internet: 45 },
+      { name: "เกาหลีใต้", flag: "🇰🇷", region: "asia", pop: 52, life: 83, literacy: 99, internet: 97 },
+      { name: "โคลอมเบีย", flag: "🇨🇴", region: "americas", pop: 53, life: 74, literacy: 95, internet: 73 },
+      { name: "สเปน", flag: "🇪🇸", region: "europe", pop: 49, life: 83, literacy: 98, internet: 95 },
+      { name: "อาร์เจนตินา", flag: "🇦🇷", region: "americas", pop: 46, life: 77, literacy: 99, internet: 89 },
+      { name: "อิรัก", flag: "🇮🇶", region: "asia", pop: 46, life: 71, literacy: 86, internet: 78 },
+      { name: "ซูดาน", flag: "🇸🇩", region: "africa", pop: 51, life: 66, literacy: 61, internet: 30 },
+      { name: "แคนาดา", flag: "🇨🇦", region: "americas", pop: 40, life: 82, literacy: 99, internet: 94 },
+      { name: "อัฟกานิสถาน", flag: "🇦🇫", region: "asia", pop: 44, life: 63, literacy: 38, internet: 18 },
+      { name: "โปแลนด์", flag: "🇵🇱", region: "europe", pop: 38, life: 78, literacy: 99, internet: 88 },
+      { name: "โมร็อกโก", flag: "🇲🇦", region: "africa", pop: 38, life: 72, literacy: 77, internet: 91 },
+      { name: "ออสเตรเลีย", flag: "🇦🇺", region: "oceania", pop: 27, life: 83, literacy: 99, internet: 96 }
+    ];
+    const knownPopulation = countries.reduce((sum, country) => sum + country.pop, 0);
+    const remainder = Math.max(0, WORLD_POPULATION - knownPopulation);
+    const otherRegions = [
+      { name: "ประเทศอื่น ๆ ในเอเชีย", flag: "🌏", region: "asia", share: .42, life: 73, literacy: 85, internet: 65 },
+      { name: "ประเทศอื่น ๆ ในแอฟริกา", flag: "🌍", region: "africa", share: .35, life: 63, literacy: 70, internet: 35 },
+      { name: "ประเทศอื่น ๆ ในยุโรป", flag: "🌍", region: "europe", share: .10, life: 79, literacy: 98, internet: 89 },
+      { name: "ประเทศอื่น ๆ ในอเมริกา", flag: "🌎", region: "americas", share: .12, life: 74, literacy: 93, internet: 75 },
+      { name: "ประเทศอื่น ๆ ในโอเชียเนีย", flag: "🌏", region: "oceania", share: .01, life: 72, literacy: 90, internet: 60 }
+    ].map(region => ({ ...region, pop: remainder * region.share }));
+    const populationGroups = [...countries, ...otherRegions];
+    const format = new Intl.NumberFormat("th-TH", { maximumFractionDigits: 1 });
+    const elements = {
+      button: document.getElementById("generateBtn"), again: document.getElementById("againBtn"),
+      result: document.getElementById("resultSection"), earth: document.getElementById("earthWrap"),
+      status: document.getElementById("statusLine"), counter: document.getElementById("counter"),
+      startGame: document.getElementById("startGameBtn"),
+      game: document.getElementById("gameSection"), continueGame: document.getElementById("continueGameBtn"),
+      replayGame: document.getElementById("replayGameBtn"), newLife: document.getElementById("newLifeBtn")
+    };
+    let runs = 0;
+    let audioContext;
+    let shuffleTimer;
+    let activeCountry;
+    let gameState;
+
+    const scenarios = [
+      {
+        minAge: 5, maxAge: 12,
+        type: "วัยเด็ก · การเรียนรู้",
+        title: "ได้ลองทำกิจกรรมใหม่ที่โรงเรียนหรือชุมชน",
+        description: country => `คุณกำลังเติบโตใน${country.name} และมีโอกาสทำกิจกรรมที่ไม่เคยลองมาก่อน`,
+        choices: [
+          { label: "ลองเข้าร่วมและถามผู้ใหญ่เมื่อไม่แน่ใจ", outcome: "คุณได้เรียนรู้สิ่งใหม่และมีผู้ใหญ่คอยช่วยดูแล", effects: { skills: 4, happiness: 3 } },
+          { label: "ชวนเพื่อนไปด้วยเพื่อให้รู้สึกมั่นใจ", outcome: "การมีเพื่อนร่วมกิจกรรมช่วยให้คุณสบายใจและได้ฝึกทำงานร่วมกัน", effects: { happiness: 4, skills: 2 } },
+          { label: "เลือกสังเกตก่อนแล้วค่อยตัดสินใจ", outcome: "คุณได้ทำความเข้าใจกิจกรรมในแบบของตัวเองก่อนลงมือ", effects: { skills: 2, health: 1 } }
+        ]
+      },
+      {
+        minAge: 8, maxAge: 99,
+        type: "ครอบครัว · การวางแผน",
+        title: "มีค่าใช้จ่ายจำเป็นที่ไม่ได้วางแผนไว้",
+        description: country => `ครอบครัวของคุณใน${country.name}มีค่าใช้จ่ายก้อนหนึ่งเข้ามากะทันหัน ทุกคนกำลังช่วยกันหาทางจัดการ`,
+        choices: [
+          { label: "ช่วยกันจัดงบใหม่และใช้เงินสำรอง", outcome: "การจัดลำดับค่าใช้จ่ายช่วยให้รับมือเหตุการณ์ได้ แต่เงินสำรองลดลงเล็กน้อย", effects: { money: -3, skills: 2, happiness: 1 } },
+          { label: "คุยกับคนในครอบครัวเพื่อหาความช่วยเหลือ", outcome: "การขอแรงสนับสนุนช่วยแบ่งเบาภาระ และทำให้ได้พูดคุยกันมากขึ้น", effects: { money: 2, happiness: 3 } },
+          { label: "รับงานเล็ก ๆ เพิ่มเพื่อหารายได้", outcome: "มีรายได้เพิ่ม แต่ต้องแบ่งเวลาให้ดีเพื่อไม่ให้กระทบการพักผ่อน", effects: { money: 5, health: -2, skills: 1 } }
+        ]
+      },
+      {
+        minAge: 7, maxAge: 22,
+        type: "การเรียนรู้ · โอกาส",
+        title: "มีโอกาสเรียนทักษะใหม่หลังเลิกเรียน",
+        description: country => `ศูนย์การเรียนรู้ในชุมชนของคุณที่${country.name}เปิดกิจกรรมสอนทักษะที่สนใจ แต่เวลาว่างมีจำกัด`,
+        choices: [
+          { label: "สมัครเรียนและจัดตารางเวลาให้ชัดเจน", outcome: "คุณได้ฝึกทักษะอย่างต่อเนื่อง การจัดเวลาช่วยให้ยังเหลือเวลาพัก", effects: { skills: 7, happiness: 2, health: -1 } },
+          { label: "ลองเรียนด้วยตัวเองจากแหล่งที่เข้าถึงได้", outcome: "การเรียนด้วยตัวเองยืดหยุ่นและช่วยฝึกความรับผิดชอบ แม้อาจต้องใช้เวลาค้นหาข้อมูล", effects: { skills: 5, happiness: 1 } },
+          { label: "ขอคำแนะนำจากครูหรือคนที่ไว้ใจก่อน", outcome: "คำแนะนำช่วยให้เห็นทางเลือกชัดขึ้น และคุณตัดสินใจได้โดยไม่ต้องรีบร้อน", effects: { skills: 3, happiness: 3 } }
+        ]
+      },
+      {
+        minAge: 0, maxAge: 99,
+        type: "ชุมชน · เหตุการณ์ไม่คาดคิด",
+        title: "การเดินทางประจำวันติดขัดจากสภาพอากาศ",
+        description: country => `ฝนตกหนักและการเดินทางในพื้นที่ที่คุณอยู่ใน${country.name}ล่าช้า คุณมีนัดสำคัญในวันนี้`,
+        choices: [
+          { label: "แจ้งผู้เกี่ยวข้องและหาทางเดินทางที่ปลอดภัย", outcome: "คุณอาจไปถึงช้ากว่าเดิม แต่ลดความเสี่ยงและสื่อสารกับคนที่รอได้", effects: { health: 2, skills: 2, happiness: 1 } },
+          { label: "เปลี่ยนไปทำกิจกรรมทางไกลถ้าทำได้", outcome: "การปรับแผนช่วยประหยัดเวลาและทำให้ยังทำภารกิจต่อได้", effects: { skills: 3, money: 1, happiness: 2 } },
+          { label: "รีบออกเดินทางตามแผนเดิม", outcome: "คุณอาจไปได้ทัน แต่ความเร่งรีบทำให้เหนื่อยและต้องระวังเป็นพิเศษ", effects: { health: -4, happiness: -2, skills: 1 } }
+        ]
+      },
+      {
+        minAge: 18, maxAge: 65,
+        type: "อาชีพ · การตัดสินใจ",
+        title: "ได้รับข้อเสนองานแรก แต่ยังไม่แน่ใจ",
+        description: country => `ใน${country.name}คุณได้รับข้อเสนองานที่เกี่ยวข้องกับสิ่งที่เรียนมา เงื่อนไขบางอย่างยังต้องสอบถามเพิ่มเติม`,
+        choices: [
+          { label: "ถามรายละเอียดหน้าที่และเงื่อนไขก่อนตอบรับ", outcome: "คุณเข้าใจความคาดหวังชัดขึ้น ทำให้ตัดสินใจและวางแผนชีวิตได้ดีขึ้น", effects: { skills: 4, money: 2, happiness: 1 } },
+          { label: "รับงานเพื่อเริ่มเก็บประสบการณ์", outcome: "คุณได้เริ่มทำงานและมีรายได้ แต่การเรียนรู้หน้างานอาจต้องใช้พลังและเวลา", effects: { money: 5, skills: 3, health: -2 } },
+          { label: "ขอเวลาเปรียบเทียบกับทางเลือกอื่น", outcome: "คุณมีเวลาคิดและหาข้อมูลเพิ่ม แม้ยังต้องรับมือกับความไม่แน่นอนช่วงหนึ่ง", effects: { skills: 2, happiness: 2, money: -1 } }
+        ]
+      },
+      {
+        minAge: 18, maxAge: 99,
+        type: "สุขภาพ · การดูแลตัวเอง",
+        title: "ช่วงนี้พักผ่อนไม่พอและรู้สึกเหนื่อยต่อเนื่อง",
+        description: country => `งานและภาระส่วนตัวใน${country.name}ทำให้คุณเริ่มรู้สึกว่าร่างกายต้องการการดูแล`,
+        choices: [
+          { label: "หาเวลาพักและปรับกิจวัตรประจำวัน", outcome: "การพักและปรับกิจวัตรอาจช่วยให้มีแรงกลับมา โดยอาการที่ต่อเนื่องควรปรึกษาผู้เชี่ยวชาญ", effects: { health: 6, happiness: 3, money: -1 } },
+          { label: "ปรึกษาบุคลากรทางการแพทย์", outcome: "การขอคำแนะนำช่วยให้เข้าใจทางเลือกดูแลสุขภาพมากขึ้น อาจมีค่าใช้จ่ายหรือใช้เวลา", effects: { health: 7, skills: 1, money: -3 } },
+          { label: "ฝืนทำทุกอย่างต่อไปก่อน", outcome: "งานบางอย่างอาจเสร็จเร็วขึ้น แต่การละเลยความเหนื่อยอาจทำให้ฟื้นตัวได้ยากกว่าเดิม", effects: { money: 2, health: -6, happiness: -4 } }
+        ]
+      },
+      {
+        minAge: 10, maxAge: 99,
+        type: "ความสัมพันธ์ · การสื่อสาร",
+        title: "เพื่อนสนิทเข้าใจสิ่งที่คุณพูดผิด",
+        description: country => `หลังเกิดความเข้าใจผิดกับเพื่อนในชุมชนของคุณที่${country.name} คุณต้องตัดสินใจว่าจะเริ่มคุยกันอย่างไร`,
+        choices: [
+          { label: "ชวนคุยอย่างใจเย็นและฟังอีกฝ่าย", outcome: "การรับฟังช่วยเปิดโอกาสให้เข้าใจกัน แม้อาจต้องใช้เวลา", effects: { happiness: 6, skills: 3 } },
+          { label: "เขียนข้อความอธิบายความรู้สึกให้ชัดเจน", outcome: "การเรียบเรียงความคิดช่วยลดการสื่อสารคลาดเคลื่อน และทำให้คุณได้ทบทวนตัวเอง", effects: { happiness: 4, skills: 2 } },
+          { label: "เว้นระยะสักพักก่อนกลับไปคุย", outcome: "การให้เวลาตัวเองสงบลงอาจช่วยได้ แต่ควรกลับมาสื่อสารเมื่อพร้อม", effects: { health: 1, happiness: 1 } }
+        ]
+      },
+      {
+        minAge: 16, maxAge: 99,
+        type: "การเงิน · เป้าหมายระยะยาว",
+        title: "อยากเก็บเงินเพื่อเป้าหมายสำคัญ",
+        description: country => `คุณอยากเก็บเงินเพื่อเรียนต่อหรือซื้ออุปกรณ์ทำงานใน${country.name} แต่มีค่าใช้จ่ายประจำที่ต้องดูแล`,
+        choices: [
+          { label: "ตั้งเป้าหมายรายเดือนและติดตามรายจ่าย", outcome: "แผนที่ทำได้จริงช่วยให้เห็นความคืบหน้า แม้ต้องใช้วินัยและเวลา", effects: { money: 6, skills: 2, happiness: 1 } },
+          { label: "หาความรู้หรือคำปรึกษาเรื่องการเงินก่อน", outcome: "คุณได้ข้อมูลเพื่อวางแผนอย่างรอบคอบขึ้น โดยไม่ต้องรีบเสี่ยงกับทางเลือกที่ไม่เข้าใจ", effects: { skills: 4, money: 2 } },
+          { label: "ลดรายจ่ายที่ไม่จำเป็นบางส่วน", outcome: "เงินเหลือเก็บเพิ่มขึ้น แต่ควรเลือกตัดเฉพาะสิ่งที่ไม่กระทบสุขภาพและความเป็นอยู่", effects: { money: 4, health: -1, happiness: -1 } }
+        ]
+      },
+      {
+        minAge: 18, maxAge: 70,
+        type: "โอกาส · การเปลี่ยนแปลง",
+        title: "มีโอกาสย้ายไปเริ่มต้นในเมืองใหม่",
+        description: country => `มีงานหรือการเรียนที่น่าสนใจในอีกเมืองหนึ่งของ${country.name} แต่การย้ายอาจเปลี่ยนกิจวัตรและระยะห่างจากคนใกล้ชิด`,
+        choices: [
+          { label: "เปรียบเทียบรายได้ ค่าใช้จ่าย และชีวิตประจำวัน", outcome: "ข้อมูลช่วยให้เห็นต้นทุนและโอกาสรอบด้าน ก่อนตัดสินใจตามเป้าหมายของตัวเอง", effects: { skills: 4, money: 2, happiness: 1 } },
+          { label: "ทดลองไปอยู่ชั่วคราวถ้าจัดการได้", outcome: "การทดลองช่วยให้รู้จักสภาพแวดล้อมจริง แต่ต้องเตรียมเงินและแผนสำรอง", effects: { skills: 4, money: -3, happiness: 2 } },
+          { label: "อยู่ใกล้เครือข่ายสนับสนุนและหาโอกาสในพื้นที่", outcome: "การมีคนคุ้นเคยช่วยให้รู้สึกมั่นคง และยังมีทางเลือกเติบโตในพื้นที่เดิม", effects: { happiness: 4, health: 1, skills: 2 } }
+        ]
+      },
+      {
+        minAge: 40, maxAge: 99,
+        type: "ครอบครัว · การดูแลกัน",
+        title: "คนในครอบครัวต้องการความช่วยเหลือมากขึ้น",
+        description: country => `คนใกล้ชิดใน${country.name}ต้องการความช่วยเหลือเรื่องการเดินทางและการใช้ชีวิตประจำวัน คุณอยากดูแลแต่ก็มีภาระของตัวเอง`,
+        choices: [
+          { label: "แบ่งหน้าที่กับญาติหรือเครือข่ายที่ไว้ใจ", outcome: "การช่วยกันดูแลทำให้ภาระไม่ตกอยู่กับคนเดียว และยังเหลือเวลาดูแลตัวเอง", effects: { happiness: 4, health: 2, skills: 2 } },
+          { label: "คุยกันเพื่อวางแผนความช่วยเหลือที่ทำได้จริง", outcome: "แผนที่ทุกคนมีส่วนร่วมช่วยให้รู้ขอบเขตและจัดการเวลาได้ดีขึ้น", effects: { skills: 4, happiness: 2 } },
+          { label: "รับภาระไว้คนเดียวในช่วงแรก", outcome: "คนในครอบครัวได้รับความช่วยเหลือ แต่คุณอาจเหนื่อยและควรขอแรงสนับสนุนเมื่อจำเป็น", effects: { happiness: 3, health: -5 } }
+        ]
+      },
+      {
+        minAge: 55, maxAge: 99,
+        type: "วัยหลังทำงาน · การเปลี่ยนแปลง",
+        title: "ถึงเวลาคิดถึงชีวิตหลังเกษียณ",
+        description: country => `ใน${country.name}คุณเริ่มทบทวนว่าจะจัดสมดุลระหว่างรายได้ สุขภาพ เวลาว่าง และคนสำคัญอย่างไร`,
+        choices: [
+          { label: "ค่อย ๆ วางแผนรายจ่ายและกิจวัตรล่วงหน้า", outcome: "การเตรียมตัวช่วยให้เห็นทางเลือกมากขึ้น และปรับแผนตามสถานการณ์ได้", effects: { money: 4, skills: 2, happiness: 1 } },
+          { label: "ใช้เวลากับกิจกรรมและคนที่มีความหมาย", outcome: "ความสัมพันธ์และกิจกรรมที่ชอบช่วยเติมความสุข โดยยังควรดูแลแผนการเงินควบคู่กัน", effects: { happiness: 6, health: 2, money: -2 } },
+          { label: "หางานหรือบทบาทใหม่ที่เหมาะกับกำลัง", outcome: "บทบาทใหม่ช่วยให้รู้สึกมีเป้าหมาย แต่ควรเลือกจังหวะที่เหมาะกับสุขภาพ", effects: { money: 3, skills: 2, health: -1 } }
+        ]
+      }
+    ];
+    const emergencyScenario = {
+      type: "เหตุฉุกเฉิน · ความปลอดภัย",
+      title: "เกิดเหตุฉุกเฉินในพื้นที่ใกล้ตัว",
+      description: country => `มีประกาศเตือนเหตุฉุกเฉินในพื้นที่ของคุณที่${country.name} สถานการณ์ยังไม่ชัดเจนและความปลอดภัยต้องมาก่อน`,
+      choices: [
+        { label: "ไปยังจุดปลอดภัยและติดตามคำแนะนำจากหน่วยงาน", outcome: "คุณให้ความสำคัญกับความปลอดภัยและขอความช่วยเหลือจากแหล่งที่เหมาะสม", effects: { health: 2, skills: 2, happiness: -1 }, deathChance: .01 },
+        { label: "ติดต่อคนใกล้ชิดและขอความช่วยเหลือ", outcome: "การติดต่อเครือข่ายช่วยให้ประสานความช่วยเหลือและลดการเผชิญเหตุเพียงลำพัง", effects: { health: 1, happiness: 2 }, deathChance: .03 },
+        { label: "ฝ่าพื้นที่เสี่ยงโดยไม่รอความช่วยเหลือ", outcome: "การตัดสินใจนี้ทำให้คุณเผชิญความเสี่ยงสูง แม้ตั้งใจจะจัดการเหตุการณ์ด้วยตัวเอง", effects: { health: -18, happiness: -5 }, deathChance: .24 }
+      ]
+    };
+
+    function weightedPick(items) {
+      const total = items.reduce((sum, item) => sum + item.pop, 0);
+      let point = Math.random() * total;
+      for (const item of items) {
+        point -= item.pop;
+        if (point <= 0) return item;
+      }
+      return items[items.length - 1];
+    }
+
+    function playChime() {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      audioContext ||= new AudioContextClass();
+      if (audioContext.state === "suspended") {
+        audioContext.resume().catch(error => console.error("เริ่มเสียงเอฟเฟกต์ไม่ได้", error));
+      }
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(660, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(990, audioContext.currentTime + .18);
+      gain.gain.setValueAtTime(.0001, audioContext.currentTime);
+      gain.gain.exponentialRampToValueAtTime(.08, audioContext.currentTime + .025);
+      gain.gain.exponentialRampToValueAtTime(.0001, audioContext.currentTime + .42);
+      oscillator.connect(gain); gain.connect(audioContext.destination);
+      oscillator.start(); oscillator.stop(audioContext.currentTime + .43);
+    }
+
+    function playWheelTick(progress) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      audioContext ||= new AudioContextClass();
+      if (audioContext.state === "suspended") {
+        audioContext.resume().catch(error => console.error("เริ่มเสียงหมุดวงล้อไม่ได้", error));
+      }
+      const now = audioContext.currentTime;
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      oscillator.type = "triangle";
+      oscillator.frequency.setValueAtTime(1250 - progress * 350, now);
+      oscillator.frequency.exponentialRampToValueAtTime(520, now + .025);
+      gain.gain.setValueAtTime(.0001, now);
+      gain.gain.exponentialRampToValueAtTime(.045, now + .003);
+      gain.gain.exponentialRampToValueAtTime(.0001, now + .045);
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start(now);
+      oscillator.stop(now + .05);
+    }
+
+    function openLifePage(country) {
+      const gender = Math.random() < .5 ? "เด็กผู้หญิง" : "เด็กผู้ชาย";
+      const wealthRoll = Math.random();
+      const wealth = wealthRoll < .5 ? "รายได้น้อย" : wealthRoll < .9 ? "ปานกลาง" : "รายได้สูง";
+      const profile = { country, gender, wealth, run: runs };
+      try {
+        sessionStorage.setItem("one-life-profile", JSON.stringify(profile));
+      } catch (error) {
+        elements.status.textContent = "บันทึกผลการสุ่มไม่ได้ โปรดลองอีกครั้งหรืออนุญาตพื้นที่จัดเก็บในเบราว์เซอร์";
+        elements.button.disabled = false;
+        throw error;
+      }
+      const frame = document.createElement("iframe");
+      frame.id = "lifeAppFrame";
+      frame.title = "หน้าจำลองการใช้ชีวิต";
+      frame.src = "life.html";
+      frame.setAttribute("allow", "autoplay");
+      Object.assign(frame.style, {
+        position: "fixed",
+        inset: "0",
+        zIndex: "100",
+        width: "100%",
+        height: "100%",
+        border: "0",
+        background: "#070b16"
+      });
+      document.body.append(frame);
+    }
+
+    function updateGameStats() {
+      for (const [key, value] of Object.entries(gameState.stats)) {
+        document.getElementById(`${key}Value`).textContent = `${value}/100`;
+        document.getElementById(`${key}Bar`).style.width = `${value}%`;
+      }
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function startSimulation() {
+      if (!activeCountry) return;
+      const wealth = document.getElementById("wealth").textContent;
+      const initialMoney = wealth === "รายได้สูง" ? 72 : wealth === "ปานกลาง" ? 56 : 40;
+      const endAge = Math.max(48, Math.min(99, activeCountry.life + randomInt(-10, 14)));
+      gameState = {
+        age: 5,
+        endAge,
+        yearOfBirth: 2026,
+        eventCount: 0,
+        lastScenario: null,
+        ended: false,
+        stats: {
+          money: initialMoney,
+          health: Math.round(Math.max(35, Math.min(85, 50 + (activeCountry.life - 60) * 1.25))),
+          skills: Math.round(Math.max(35, Math.min(85, activeCountry.literacy * .55 + activeCountry.internet * .2 + 20))),
+          happiness: 60
+        }
+      };
+      document.getElementById("gameLocation").textContent = `${activeCountry.flag} ${activeCountry.name} · เกิดปี ${gameState.yearOfBirth}`;
+      document.getElementById("familySummary").textContent = `คุณเริ่มต้นชีวิตในครอบครัว${wealth === "รายได้สูง" ? "ที่มีรายได้สูง" : wealth === "ปานกลาง" ? "ชนชั้นกลาง" : "รายได้น้อย"}ที่${activeCountry.name} การศึกษา การดูแลสุขภาพ และโอกาสในชีวิตเป็นเพียงภาพจำลองคร่าว ๆ`;
+      document.getElementById("lifespanHint").textContent = `อายุคาดเฉลี่ยแรกเกิดของประเทศประมาณ ${activeCountry.life} ปี ส่วนอายุสิ้นสุดในเกมจะสุ่มแปรผัน ไม่ใช่การทำนายเฉพาะบุคคล`;
+      document.getElementById("scenarioCard").classList.remove("hidden");
+      document.getElementById("gameFeedback").classList.add("hidden");
+      document.getElementById("gameSummary").classList.add("hidden");
+      document.getElementById("lifeLog").replaceChildren();
+      elements.game.classList.remove("hidden");
+      appendLifeLog(0, "เริ่มต้นชีวิต", `คุณเกิดและเติบโตใน${activeCountry.name}`);
+      appendLifeLog(gameState.age, "วัยเด็ก", "เรื่องราวจำลองเริ่มต้นขึ้นและเวลาจะค่อย ๆ เดินหน้าไปตามการตัดสินใจ");
+      updateGameStats();
+      updateLifeProgress();
+      showScenario();
+      elements.game.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function updateLifeProgress() {
+      const percent = Math.min(100, Math.round(gameState.age / gameState.endAge * 100));
+      const year = gameState.yearOfBirth + gameState.age;
+      document.getElementById("gameAge").textContent = `${gameState.age} ปี · ${year}`;
+      document.getElementById("roundLabel").textContent = `ปีจำลอง ${year} · เหตุการณ์ที่ ${gameState.eventCount}`;
+      document.getElementById("roundPercent").textContent = `${percent}%`;
+      document.getElementById("roundBar").style.width = `${percent}%`;
+      document.getElementById("lifeGridCount").textContent = `${gameState.age} / ${gameState.endAge} ปี`;
+      const grid = document.getElementById("lifeGrid");
+      if (!grid.childElementCount) {
+        const cells = document.createDocumentFragment();
+        for (let age = 0; age < 100; age += 1) {
+          const cell = document.createElement("span");
+          cell.className = "life-cell";
+          cell.setAttribute("aria-hidden", "true");
+          cells.append(cell);
+        }
+        grid.append(cells);
+      }
+      [...grid.children].forEach((cell, age) => {
+        cell.classList.toggle("past", age < gameState.age);
+        cell.classList.toggle("current", age === gameState.age);
+      });
+    }
+
+    function appendLifeLog(age, title, detail) {
+      const entry = document.createElement("div");
+      entry.className = "life-log-entry";
+      const heading = document.createElement("p");
+      heading.className = "thai text-xs font-semibold text-slate-200";
+      heading.textContent = `อายุ ${age} ปี · ${title}`;
+      const description = document.createElement("p");
+      description.className = "thai mt-1 text-xs leading-5 text-slate-400";
+      description.textContent = detail;
+      entry.append(heading, description);
+      const log = document.getElementById("lifeLog");
+      log.append(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function pickScenario() {
+      const available = scenarios.filter(scenario => gameState.age >= scenario.minAge && gameState.age <= scenario.maxAge);
+      const candidates = available.filter(scenario => scenario !== gameState.lastScenario);
+      const useEmergency = Math.random() < .09;
+      const scenario = useEmergency ? emergencyScenario : (candidates.length ? candidates : available)[randomInt(0, (candidates.length ? candidates : available).length - 1)];
+      gameState.lastScenario = scenario === emergencyScenario ? null : scenario;
+      return scenario;
+    }
+
+    function showScenario() {
+      if (gameState.ended) return;
+      gameState.eventCount += 1;
+      gameState.currentScenario = pickScenario();
+      const scenario = gameState.currentScenario;
+      updateLifeProgress();
+      document.getElementById("scenarioType").textContent = scenario.type;
+      document.getElementById("scenarioTitle").textContent = scenario.title;
+      document.getElementById("scenarioDescription").textContent = scenario.description(activeCountry);
+      const choices = document.getElementById("scenarioChoices");
+      choices.replaceChildren();
+      scenario.choices.forEach(choice => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "choice-button thai rounded-xl border border-white/10 bg-white/[.035] px-4 py-3 text-sm leading-6 text-slate-200 transition hover:border-cyan-200/30 hover:bg-cyan-200/[.07]";
+        button.textContent = choice.label;
+        button.addEventListener("click", () => chooseOption(choice, button), { once: true });
+        choices.append(button);
+      });
+    }
+
+    function chooseOption(choice, selectedButton) {
+      if (gameState.ended) return;
+      document.querySelectorAll("#scenarioChoices button").forEach(button => { button.disabled = true; });
+      selectedButton.classList.add("border-cyan-200/30", "bg-cyan-200/[.07]");
+      for (const [key, change] of Object.entries(choice.effects)) {
+        gameState.stats[key] = Math.max(0, Math.min(100, gameState.stats[key] + change));
+      }
+      updateGameStats();
+      appendLifeLog(gameState.age, gameState.currentScenario.title, choice.outcome);
+      document.getElementById("feedbackText").textContent = choice.outcome;
+      document.getElementById("gameFeedback").classList.remove("hidden");
+
+      if (gameState.stats.health === 0) {
+        endSimulation("สุขภาพในเกมลดลงจนสิ้นสุดชีวิตจำลองก่อนอายุขัยที่สุ่มไว้");
+      } else if (choice.deathChance && Math.random() < choice.deathChance) {
+        endSimulation("เหตุฉุกเฉินครั้งนี้ทำให้ชีวิตจำลองสิ้นสุดลงก่อนวัยอันควร");
+      }
+    }
+
+    function continueSimulation() {
+      if (gameState.ended) return;
+      document.getElementById("gameFeedback").classList.add("hidden");
+      gameState.age = Math.min(gameState.endAge, gameState.age + randomInt(2, 5));
+      if (gameState.age >= 55) {
+        gameState.stats.health = Math.max(0, gameState.stats.health - randomInt(0, 2));
+      }
+      updateGameStats();
+      updateLifeProgress();
+      if (gameState.age >= gameState.endAge) {
+        endSimulation(`ชีวิตจำลองดำเนินมาถึงอายุ ${gameState.age} ปี ซึ่งเป็นช่วงสิ้นสุดที่สุ่มไว้สำหรับเกมนี้`);
+        return;
+      }
+      if (gameState.stats.health === 0) {
+        endSimulation("สุขภาพในเกมลดลงจนสิ้นสุดชีวิตจำลองก่อนอายุขัยที่สุ่มไว้");
+        return;
+      }
+      if (gameState.stats.health <= 8 && Math.random() < .16) {
+        endSimulation("ภาวะสุขภาพในเกมทำให้ชีวิตจำลองสิ้นสุดลงก่อนอายุขัยที่สุ่มไว้");
+        return;
+      }
+      showScenario();
+    }
+
+    function endSimulation(reason) {
+      gameState.ended = true;
+      document.getElementById("scenarioCard").classList.add("hidden");
+      document.getElementById("gameFeedback").classList.add("hidden");
+      document.getElementById("roundLabel").textContent = `ชีวิตจำลองสิ้นสุด · อายุ ${gameState.age} ปี`;
+      document.getElementById("roundPercent").textContent = `${Math.min(100, Math.round(gameState.age / gameState.endAge * 100))}%`;
+      document.getElementById("roundBar").style.width = `${Math.min(100, Math.round(gameState.age / gameState.endAge * 100))}%`;
+      document.getElementById("summaryTitle").textContent = "ชีวิตจำลองสิ้นสุดลง";
+      document.getElementById("summaryText").textContent = `คุณใช้ชีวิตจำลอง ${gameState.age} ปีใน${activeCountry.name} และพบ ${gameState.eventCount} เหตุการณ์ ${reason} สถานะสุดท้าย: สุขภาพ ${gameState.stats.health} · ความสุข ${gameState.stats.happiness} · ความรู้ ${gameState.stats.skills} · การเงิน ${gameState.stats.money} คะแนนในเกมนี้เป็นเพียงภาพจำลอง ไม่ใช่การประเมินชีวิตจริง`;
+      document.getElementById("gameSummary").classList.remove("hidden");
+      appendLifeLog(gameState.age, "สิ้นสุดชีวิตจำลอง", reason);
+      updateLifeProgress();
+    }
+
+    function generateLife() {
+      if (elements.button.disabled) return;
+      elements.button.disabled = true;
+      elements.result.classList.add("hidden");
+      elements.result.classList.remove("reveal");
+      elements.earth.classList.add("scanning");
+      elements.status.textContent = "กำลังสุ่มจุดเริ่มต้นของชีวิต...";
+      const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 180 : 1550;
+      const shuffleStartedAt = performance.now();
+      const shuffle = () => {
+        const progress = Math.min(1, (performance.now() - shuffleStartedAt) / duration);
+        const preview = weightedPick(populationGroups);
+        elements.counter.innerHTML = `${preview.flag} ${preview.name}<span class="thai ml-2 text-sm font-normal text-slate-500">กำลังสุ่ม</span>`;
+        playWheelTick(progress);
+        if (progress < 1) {
+          shuffleTimer = window.setTimeout(shuffle, 120 - progress * 82);
+        }
+      };
+      shuffle();
+      window.setTimeout(() => {
+        window.clearTimeout(shuffleTimer);
+        const selected = weightedPick(populationGroups);
+        runs += 1;
+        elements.earth.classList.remove("scanning");
+        elements.status.textContent = "สุ่มชีวิตสำเร็จ กำลังพาไปยังหน้าใช้ชีวิตจำลอง...";
+        elements.counter.innerHTML = `${format.format(WORLD_POPULATION * 1000000)}<span class="thai ml-2 text-sm font-normal text-slate-500">ชีวิต</span>`;
+        openLifePage(selected);
+        playChime();
+        elements.button.disabled = false;
+      }, duration);
+    }
+
+    elements.button.addEventListener("click", generateLife);
+    elements.again.addEventListener("click", generateLife);
+    elements.startGame.addEventListener("click", startSimulation);
+    elements.continueGame.addEventListener("click", continueSimulation);
+    elements.replayGame.addEventListener("click", startSimulation);
+    elements.newLife.addEventListener("click", generateLife);
+  </script>
+  <script src="site-controls.js"></script>
+</body>
+</html>
